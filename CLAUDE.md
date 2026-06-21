@@ -11,9 +11,8 @@ it to GitHub. A Next.js site renders the committed posts and auto-deploys.
 
 This particular deployment is **Movies Rule** (`moviesrule.com`) — a movies /
 streaming niche site. The engine itself is generic: everything niche-specific
-lives in **`src/site.config.ts`**. The `package.json` name is still `trendblog`
-(the upstream template name), and several template files still carry the
-original tech-niche defaults — see [Branding & template drift](#branding--template-drift).
+lives in **`src/site.config.ts`**. A few internal identifiers still carry the
+upstream template name `trendblog` — see [Template defaults](#template-defaults).
 
 **Cost at steady state: $0** — runs entirely on free tiers (Gemini, Brave,
 Pexels, GitHub Actions, Vercel/Cloudflare).
@@ -29,8 +28,8 @@ Pexels, GitHub Actions, Vercel/Cloudflare).
 - **Zod** — validates the LLM's JSON output against a self-healing schema
 - **tsx** — runs the pipeline scripts directly from TypeScript
 
-> Note: README/`.env.example` mention `pnpm`, but the project ships a
-> `package-lock.json` and the CI workflow uses `npm ci`. **Use `npm`** here.
+> Note: the project ships a `package-lock.json` and CI uses `npm ci`. **Use
+> `npm`** here, not pnpm/yarn.
 
 ## Commands
 
@@ -142,9 +141,16 @@ sources: [{ title, url }]
 
 Branding (`name`, `tagline`, `description`, `url`, `footerNote`), `audience`
 (goes into the writer's prompt), `categories` + `navCategories`, niche `sources`
-(`subreddits`, `rssFeeds`, `braveQueries`), `adsenseClient`, the `llm` block
-(endpoint/model/`apiKeyEnv` — defaults to Gemini), and `imageProvider`. See
-`CREATE-A-SITE.md` for the full spin-up-a-new-site walkthrough.
+(`subreddits`, `rssFeeds`, `braveQueries`, `trendsKeywords`), `adsenseClient`,
+the `llm` block (endpoint/model/`apiKeyEnv` — defaults to Gemini), and
+`imageProvider`. See `CREATE-A-SITE.md` for the full spin-up walkthrough.
+
+Things wired to read from this config (don't hard-code these): `reddit.ts`,
+`rss.ts`, `bravenews.ts`, and `googletrends.ts` (niche keyword filter) read their
+`sources`; `tina/config.ts` derives its category dropdown from `categories`; the
+site chrome, feed, sitemap, robots, and structured-data read `name`/`url`/
+`description` via `SITE_NAME`/`SITE_URL`/`SITE_DESCRIPTION` in
+`src/lib/structured-data.ts`.
 
 ### Environment variables
 
@@ -177,20 +183,20 @@ placeholders only. See `SECURITY_REMEDIATION.md` for history/context.
 - The Vercel cron route exists but Vercel Hobby caps crons at once/day, which is
   why scheduling lives in GitHub Actions for the $0 path.
 
-## Branding & template drift
+## Template defaults
 
-This is a template instance. **Source of truth for branding is
-`src/site.config.ts`** (`Movies Rule`). Some files still carry upstream
-"Wire and Logic" / tech-niche defaults and are safe to update if you touch them:
-- `README.md`, the seed post `content/posts/welcome-to-the-dispatch.mdx`, and the
-  "Back to Wire and Logic" link in `src/app/blog/[slug]/page.tsx` still say
-  "Wire and Logic".
-- `tina/config.ts` `category` options (`news/tools/engineering/ai/security/opinion`)
-  are stale relative to `site.config.ts` `categories`
-  (`news/reviews/streaming/trailers/boxoffice/features`). Keep them in sync if
-  you edit categories.
+This is an instance of a generic auto-blog template, customized for Movies Rule.
+**Source of truth for branding/niche is `src/site.config.ts`** — read from
+`siteConfig` (or `SITE_NAME`/`SITE_URL` in `structured-data.ts`) rather than
+hard-coding strings. The old "Wire and Logic" brand and tech-niche copy have been
+cleaned out of the site, sources, and docs.
 
-When in doubt, read from `siteConfig` rather than hard-coding strings.
+A few **internal** identifiers still use the upstream engine name `trendblog` and
+are intentionally left (they're not user-facing): the `trendblog-bot` git commit
+identity in `.github/workflows/generate.yml`, the Reddit/scraper user-agent
+strings in `src/lib/sources/reddit.ts` and `src/lib/orchestrator/research.ts`,
+and the `TrendBlogBot` UA in `googletrends.ts`. `SECURITY_REMEDIATION.md` is a
+historical incident record and references the original stack on purpose.
 
 ## Conventions
 

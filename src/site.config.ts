@@ -28,6 +28,17 @@ export const siteConfig = {
       'box office results',
       'film casting news',
     ],
+    // Google Trends' "Trending now" feed is general-interest (sports, weather,
+    // celebrities…). Only surface a trend when its term or related headlines
+    // match one of these niche keywords. Cheap, lowercased substring match.
+    trendsKeywords: [
+      'movie', 'movies', 'film', 'films', 'trailer', 'box office', 'streaming',
+      'netflix', 'disney', 'disney+', 'hbo', 'max', 'hulu', 'prime video', 'apple tv',
+      'paramount', 'peacock', 'a24', 'marvel', 'dc', 'pixar', 'oscar', 'oscars',
+      'academy award', 'golden globe', 'sequel', 'prequel', 'reboot', 'remake',
+      'casting', 'director', 'actor', 'actress', 'premiere', 'cinema', 'theater',
+      'theatres', 'series', 'tv show', 'season', 'episode', 'showtime', 'documentary',
+    ],
   },
 
   // ── Ads ───────────────────────────────────────────────────────

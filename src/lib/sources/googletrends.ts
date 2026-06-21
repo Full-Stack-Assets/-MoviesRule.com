@@ -1,20 +1,14 @@
 import Parser from 'rss-parser';
 import type { RawItem } from '../orchestrator/types';
+import { siteConfig } from '@/site.config';
 
 // Google Trends' "Trending now" feed for the US. No API key needed.
 const TRENDS_RSS = 'https://trends.google.com/trending/rss?geo=US';
 
 // The raw feed is general-interest (sports, celebrities, weather…). Keep the
-// blog on its tech/AI/business niche by only surfacing trends whose term or
-// related headlines match one of these. Cheap substring match, lowercased.
-const TECH_KEYWORDS = [
-  'ai', 'artificial intelligence', 'llm', 'gpt', 'openai', 'anthropic', 'claude', 'gemini',
-  'google', 'apple', 'microsoft', 'meta', 'amazon', 'nvidia', 'intel', 'amd', 'chip', 'gpu',
-  'semiconductor', 'software', 'app', 'startup', 'tech', 'iphone', 'android', 'pixel',
-  'crypto', 'bitcoin', 'ethereum', 'robot', 'tesla', 'spacex', 'cyber', 'hack', 'breach',
-  'cloud', 'developer', 'programming', 'open source', 'open-source', 'quantum', 'vr', 'ar',
-  'headset', 'browser', 'operating system', 'data center', 'datacenter', 'agent',
-];
+// blog on-niche by only surfacing trends whose term or related headlines match
+// one of the configured keywords. Cheap substring match, lowercased.
+const NICHE_KEYWORDS = siteConfig.sources.trendsKeywords;
 
 type TrendItemFields = {
   'ht:approx_traffic'?: string;
@@ -48,7 +42,7 @@ export async function parseTrendsXml(xml: string): Promise<RawItem[]> {
 
 async function fetchText(url: string): Promise<string> {
   const res = await fetch(url, {
-    headers: { 'user-agent': 'Mozilla/5.0 (compatible; WireAndLogicBot/1.0)' },
+    headers: { 'user-agent': 'Mozilla/5.0 (compatible; TrendBlogBot/1.0)' },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.text();
@@ -56,7 +50,7 @@ async function fetchText(url: string): Promise<string> {
 
 type TrendItem = TrendItemFields & { title?: string; isoDate?: string; pubDate?: string };
 
-/** Map parsed feed items to RawItems, dropping anything off the tech niche. */
+/** Map parsed feed items to RawItems, dropping anything off the configured niche. */
 export function toRawItems(items: TrendItem[]): RawItem[] {
   const out: RawItem[] = [];
 
@@ -71,7 +65,7 @@ export function toRawItems(items: TrendItem[]): RawItem[] {
     ]
       .join(' ')
       .toLowerCase();
-    if (!TECH_KEYWORDS.some((k) => haystack.includes(k))) continue;
+    if (!NICHE_KEYWORDS.some((k) => haystack.includes(k))) continue;
 
     // Prefer a related news headline + URL so the research step has something
     // concrete to scrape; fall back to a Google search for the bare term.

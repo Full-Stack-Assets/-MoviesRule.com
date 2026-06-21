@@ -15,6 +15,6 @@ export function buildDigest(posts: Post[]): { subject: string; body: string } {
     )
     .join('\n');
 
-  const body = `Here's what shipped recently on ${SITE_NAME}:\n\n${items}\n---\n\nRead everything at ${SITE_URL}\n`;
+  const body = `Here's what's new on ${SITE_NAME}:\n\n${items}\n---\n\nRead everything at ${SITE_URL}\n`;
   return { subject, body };
 }

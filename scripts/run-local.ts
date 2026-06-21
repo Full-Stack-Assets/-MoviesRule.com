@@ -4,8 +4,8 @@
  * and updates a local topic log in content/.topic-log.json.
  *
  * Usage:
- *   pnpm generate           # full run, writes to disk, does NOT commit
- *   pnpm generate --dry     # dry run, prints output only
+ *   npm run generate           # full run, writes to disk, does NOT commit
+ *   npm run generate -- --dry  # dry run, prints output only
  */
 import 'dotenv/config';
 import fs from 'node:fs/promises';
