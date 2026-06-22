@@ -77,10 +77,7 @@ change the `llm` block in `src/site.config.ts` and set the matching key
 Fill the keys into `.env.local` along with `GITHUB_OWNER` / `GITHUB_REPO` /
 `GITHUB_BRANCH`.
 
-> **⚠️ Security:** Never commit `.env.local` or any file with real keys.
-> `.env.local` is gitignored; `.env.example` holds placeholders only. See
-> [`SECURITY_REMEDIATION.md`](SECURITY_REMEDIATION.md) for history.
-
+l
 ### 4. Test locally
 
 ```bash
