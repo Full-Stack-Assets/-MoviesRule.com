@@ -23,7 +23,7 @@ report() {
   local label="$1" code="$2" alive="$3"
   if [ -z "$code" ] || [ "$code" = "000" ]; then
     printf '  %-14s ? UNKNOWN (no response / network)\n' "$label"
-  elif printf '%s ' $alive | grep -q " $code "; then
+  elif case " $alive " in *" $code "*) true ;; *) false ;; esac; then
     printf '  %-14s \033[33mALIVE\033[0m (HTTP %s) — fine for a NEW key, BAD if this is the leaked one\n' "$label" "$code"
   else
     printf '  %-14s \033[32mREVOKED\033[0m (HTTP %s)\n' "$label" "$code"
@@ -37,10 +37,11 @@ if [ -n "${GROQ_API_KEY:-}" ]; then
   report "Groq"   "$(probe -H "Authorization: Bearer $GROQ_API_KEY" https://api.groq.com/openai/v1/models)" " 200 "
 fi
 if [ -n "${GEMINI_API_KEY:-}" ]; then
-  report "Gemini" "$(probe "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY")" " 200 400 "
+  # NB: an invalid/revoked Gemini key returns HTTP 400 (API_KEY_INVALID), so 200 only.
+  report "Gemini" "$(probe "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY")" " 200 "
 fi
 if [ -n "${BRAVE_API_KEY:-}" ]; then
-  report "Brave"  "$(probe -H "X-Subscription-Token: $BRAVE_API_KEY" 'https://api.search.brave.com/res/v1/web/search?q=test&count=1')" " 200 422 "
+  report "Brave"  "$(probe -H "X-Subscription-Token: $BRAVE_API_KEY" 'https://api.search.brave.com/res/v1/web/search?q=test&count=1')" " 200 "
 fi
 if [ -n "${PEXELS_API_KEY:-}" ]; then
   report "Pexels" "$(probe -H "Authorization: $PEXELS_API_KEY" 'https://api.pexels.com/v1/search?query=a&per_page=1')" " 200 "

@@ -33,11 +33,11 @@ export const siteConfig = {
     // match one of these niche keywords. Cheap, lowercased substring match.
     trendsKeywords: [
       'movie', 'movies', 'film', 'films', 'trailer', 'box office', 'streaming',
-      'netflix', 'disney', 'disney+', 'hbo', 'max', 'hulu', 'prime video', 'apple tv',
-      'paramount', 'peacock', 'a24', 'marvel', 'dc', 'pixar', 'oscar', 'oscars',
-      'academy award', 'golden globe', 'sequel', 'prequel', 'reboot', 'remake',
-      'casting', 'director', 'actor', 'actress', 'premiere', 'cinema', 'theater',
-      'theatres', 'series', 'tv show', 'season', 'episode', 'showtime', 'documentary',
+      'netflix', 'disney', 'disney+', 'hbo max', 'hulu', 'prime video', 'apple tv',
+      'paramount', 'peacock', 'a24', 'marvel', 'dc studios', 'dc comics', 'pixar',
+      'oscar', 'oscars', 'academy award', 'golden globe', 'sequel', 'prequel', 'reboot', 'remake',
+      'casting', 'director', 'actor', 'actress', 'premiere', 'cinema', 'movie theater',
+      'tv series', 'miniseries', 'tv show', 'new season', 'final season', 'episode', 'showtime', 'documentary',
     ],
   },
 
