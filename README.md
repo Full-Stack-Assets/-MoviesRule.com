@@ -77,7 +77,6 @@ change the `llm` block in `src/site.config.ts` and set the matching key
 Fill the keys into `.env.local` along with `GITHUB_OWNER` / `GITHUB_REPO` /
 `GITHUB_BRANCH`.
 
-l
 ### 4. Test locally
 
 ```bash
