@@ -78,37 +78,4 @@ jobs:
           git commit -m "post: $(date -u +%Y-%m-%dT%H:00Z) hourly dispatch"
 
           # The remote may have advanced since checkout (concurrent runs,
-          # re-runs on a stale SHA, or other merges to main). Rebase onto the
-          # latest remote state and retry the push so a moved ref doesn't fail
-          # the whole run. The topic-log merge driver resolves the only file
-          # that two runs can both touch.
-          branch="${GITHUB_REF_NAME:-main}"
-          for attempt in 1 2 3 4 5; do
-            if git push origin "HEAD:${branch}"; then
-              echo "Pushed on attempt ${attempt}."
-              # Trigger a Vercel production redeploy for the new post. Non-fatal:
-              # the commit is already pushed, so a hook hiccup must not fail the run.
-              if [ -n "${VERCEL_DEPLOY_HOOK_URL}" ] && [ "${branch}" = "${PRODUCTION_BRANCH}" ]; then
-                echo "Triggering Vercel deploy hook…"
-                if curl -fsS -m 30 --retry 3 -X POST "${VERCEL_DEPLOY_HOOK_URL}" >/dev/null; then
-                  echo "Vercel redeploy triggered."
-                else
-                  echo "Vercel deploy hook call failed (non-fatal)." >&2
-                fi
-              elif [ -n "${VERCEL_DEPLOY_HOOK_URL}" ]; then
-                echo "Skipping deploy hook — '${branch}' is not the production branch (${PRODUCTION_BRANCH})."
-              else
-                echo "VERCEL_DEPLOY_HOOK_URL not set; relying on Vercel git auto-deploy."
-              fi
-              exit 0
-            fi
-            echo "Push rejected (attempt ${attempt}); rebasing onto origin/${branch} and retrying..."
-            git fetch origin "${branch}"
-            if ! git rebase "origin/${branch}"; then
-              echo "Rebase did not complete cleanly; aborting this attempt." >&2
-              git rebase --abort || true
-            fi
-          done
-
-          echo "Failed to push after multiple attempts." >&2
-          exit 1
+          # re-runs on a stale SHA, or other merges to main). Rebase onto the*
