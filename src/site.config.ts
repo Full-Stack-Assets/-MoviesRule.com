@@ -53,6 +53,19 @@ export const siteConfig = {
 
   // ── Engine: hero images ('pexels' | 'openverse' | 'none') ─────
   imageProvider: 'pexels',
+
+  // ── Reviews layer (cinema reviews + release rails) ────────────
+  // TMDB powers factual film metadata, posters, and "now playing / upcoming".
+  // Requires TMDB_API_KEY; the whole layer is skipped when that's unset.
+  tmdb: {
+    region: 'US', // ISO-3166-1 country for release dates + watch providers
+    language: 'en-US',
+  },
+  reviews: {
+    scoreMax: 100, // canonical review score is 0–100…
+    starMax: 5, // …displayed as an N-star rating
+    perDay: 3, // target reviews/day (used by scheduling in a later phase)
+  },
 } as const;
 
 export type SiteConfig = typeof siteConfig;

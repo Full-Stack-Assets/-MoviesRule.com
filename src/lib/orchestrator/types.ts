@@ -1,3 +1,5 @@
+import type { FilmFacts, Rating, PostType, ReviewAudio } from '../reviews';
+
 export interface RawItem {
   id: string;
   source: 'reddit' | 'hackernews' | 'devto' | 'rss' | 'youtube' | 'bravenews' | 'googletrends';
@@ -36,6 +38,13 @@ export interface GeneratedPost {
   heroImage: { url: string; alt: string; credit: string; creditUrl: string };
   body: string; // MDX
   sources: Array<{ title: string; url: string }>;
+  // ── Reviews layer (optional; populated only when type === 'review') ──
+  type?: PostType; // defaults to 'post' downstream
+  film?: FilmFacts;
+  rating?: Rating;
+  verdict?: string; // one-line, spoiler-free verdict
+  watchOn?: string[]; // platform names for the "watch on" badges
+  audio?: ReviewAudio; // optional AI narration
 }
 
 export interface TopicLog {
