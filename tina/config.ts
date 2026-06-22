@@ -1,9 +1,17 @@
 import { defineConfig } from 'tinacms';
+import { siteConfig } from '../src/site.config';
 
-// Tina v2 config. Run `pnpm dev` to start the editor at /admin/index.html.
+// Tina v2 config. Run `npm run dev` to start the editor at /admin/index.html.
 // For self-hosted mode (no Tina Cloud), leave clientId/token blank and Tina
 // will use the local filesystem directly.
 const isCloudEnabled = !!(process.env.NEXT_PUBLIC_TINA_CLIENT_ID && process.env.TINA_TOKEN);
+
+// Derive the editor's category dropdown from the single source of truth in
+// site.config.ts so the two never drift apart. "news" -> { value: 'news', label: 'News' }.
+const categoryOptions = siteConfig.categories.map((c) => ({
+  value: c,
+  label: c.charAt(0).toUpperCase() + c.slice(1),
+}));
 
 export default defineConfig({
   branch: process.env.GITHUB_BRANCH ?? 'main',
@@ -45,14 +53,7 @@ export default defineConfig({
             label: 'Category',
             type: 'string',
             required: true,
-            options: [
-              { value: 'news', label: 'News' },
-              { value: 'tools', label: 'Tools' },
-              { value: 'engineering', label: 'Engineering' },
-              { value: 'ai', label: 'AI' },
-              { value: 'security', label: 'Security' },
-              { value: 'opinion', label: 'Opinion' },
-            ],
+            options: categoryOptions,
           },
           { name: 'tags', label: 'Tags', type: 'string', list: true },
           {

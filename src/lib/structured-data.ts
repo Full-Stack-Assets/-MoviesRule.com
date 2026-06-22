@@ -62,7 +62,7 @@ export function faqJsonLd(post: Post): Record<string, unknown> | null {
 
 /**
  * Site-level JSON-LD (WebSite + the Organization that publishes it). Rendered
- * once site-wide so search/answer engines can resolve "Wire and Logic" as an
+ * once site-wide so search/answer engines can resolve the publication as an
  * entity rather than re-deriving it per page.
  */
 export function websiteJsonLd(): Record<string, unknown> {

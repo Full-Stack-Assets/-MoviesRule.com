@@ -3,6 +3,7 @@ import { listPosts } from '@/lib/posts';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { TopicLog } from '@/lib/orchestrator/types';
+import { SITE_NAME } from '@/lib/structured-data';
 
 export const revalidate = 300;
 export const metadata = { title: 'Stats' };
@@ -117,7 +118,7 @@ export default async function StatsPage() {
           <p className="mt-4 text-muted">
             No topics logged yet. Run{' '}
             <code className="rounded bg-ink/10 px-2 py-0.5 text-sm">
-              pnpm generate
+              npm run generate
             </code>{' '}
             to populate.
           </p>
@@ -162,7 +163,7 @@ export default async function StatsPage() {
           href="/"
           className="inline-flex items-center gap-2 font-display font-semibold text-accent hover:gap-3 transition-all"
         >
-          ← Back to Wire and Logic
+          ← Back to {SITE_NAME}
         </Link>
       </div>
     </div>
