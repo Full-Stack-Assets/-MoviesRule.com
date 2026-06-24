@@ -5,7 +5,7 @@ import type { GeneratedPost } from './types';
  * The shape matches the TinaCMS schema in tina/config.ts.
  */
 export function serialize(post: GeneratedPost): string {
-  const fm = {
+  const fm: Record<string, unknown> = {
     title: post.title,
     description: post.description,
     date: new Date().toISOString(),
@@ -19,6 +19,17 @@ export function serialize(post: GeneratedPost): string {
     },
     sources: post.sources,
   };
+
+  // Reviews layer: emit review-specific frontmatter only for reviews, so news
+  // posts serialize byte-for-byte as before (back-compat).
+  if (post.type === 'review') {
+    fm.type = 'review';
+    if (post.verdict) fm.verdict = post.verdict;
+    if (post.rating) fm.rating = { score: post.rating.score };
+    if (post.watchOn?.length) fm.watchOn = post.watchOn;
+    if (post.film) fm.film = post.film;
+    if (post.audio?.url) fm.audio = post.audio;
+  }
 
   const yaml = toYaml(fm);
   return `---\n${yaml}---\n\n${sanitizeBody(post.body).trim()}\n`;

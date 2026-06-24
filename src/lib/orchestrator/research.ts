@@ -8,7 +8,7 @@ interface BraveWebResult {
   description: string;
 }
 
-async function braveWebSearch(query: string): Promise<BraveWebResult[]> {
+export async function braveWebSearch(query: string): Promise<BraveWebResult[]> {
   const key = process.env.BRAVE_API_KEY;
   if (!key) return [];
 
@@ -24,7 +24,7 @@ async function braveWebSearch(query: string): Promise<BraveWebResult[]> {
   return json.web?.results ?? [];
 }
 
-async function scrapeArticle(url: string): Promise<{ title: string; content: string } | null> {
+export async function scrapeArticle(url: string): Promise<{ title: string; content: string } | null> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);

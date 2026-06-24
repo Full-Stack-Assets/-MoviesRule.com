@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import matter from 'gray-matter';
 import readingTime from 'reading-time';
+import type { FilmFacts, Rating, PostType, ReviewAudio } from './reviews';
 
 export interface PostFrontmatter {
   title: string;
@@ -11,6 +12,13 @@ export interface PostFrontmatter {
   tags: string[];
   hero: { url: string; alt: string; credit: string; creditUrl: string };
   sources: Array<{ title: string; url: string }>;
+  // ── Reviews layer (optional; present on film reviews) ──
+  type?: PostType; // absent/'post' = news/editorial; 'review' = film review
+  film?: FilmFacts;
+  rating?: Rating;
+  verdict?: string;
+  watchOn?: string[];
+  audio?: ReviewAudio;
 }
 
 export interface Post {
@@ -18,6 +26,11 @@ export interface Post {
   frontmatter: PostFrontmatter;
   body: string;
   readingTimeMin: number;
+}
+
+/** A post is a film review when its frontmatter `type` is 'review'. */
+export function isReview(post: Post): boolean {
+  return post.frontmatter.type === 'review';
 }
 
 const POSTS_DIR = path.join(process.cwd(), 'content', 'posts');

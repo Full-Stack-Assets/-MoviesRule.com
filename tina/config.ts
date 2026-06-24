@@ -55,6 +55,16 @@ export default defineConfig({
             required: true,
             options: categoryOptions,
           },
+          {
+            name: 'type',
+            label: 'Type',
+            type: 'string',
+            description: 'Defaults to a news/editorial post. Set to "review" for film reviews.',
+            options: [
+              { value: 'post', label: 'News / editorial post' },
+              { value: 'review', label: 'Film review' },
+            ],
+          },
           { name: 'tags', label: 'Tags', type: 'string', list: true },
           {
             name: 'hero',
@@ -75,6 +85,44 @@ export default defineConfig({
             fields: [
               { name: 'title', label: 'Title', type: 'string' },
               { name: 'url', label: 'URL', type: 'string' },
+            ],
+          },
+          // ── Reviews layer (only populated when Type = review) ──
+          { name: 'verdict', label: 'Verdict (one line)', type: 'string' },
+          {
+            name: 'rating',
+            label: 'Rating',
+            type: 'object',
+            fields: [{ name: 'score', label: 'Score (0–100)', type: 'number' }],
+          },
+          { name: 'watchOn', label: 'Watch on', type: 'string', list: true },
+          {
+            name: 'film',
+            label: 'Film (TMDB facts)',
+            type: 'object',
+            fields: [
+              { name: 'tmdbId', label: 'TMDB ID', type: 'number' },
+              { name: 'title', label: 'Title', type: 'string' },
+              { name: 'year', label: 'Year', type: 'number' },
+              { name: 'director', label: 'Director', type: 'string' },
+              { name: 'cast', label: 'Cast', type: 'string', list: true },
+              { name: 'genres', label: 'Genres', type: 'string', list: true },
+              { name: 'runtimeMin', label: 'Runtime (min)', type: 'number' },
+              { name: 'releaseDate', label: 'Release date', type: 'string' },
+              { name: 'posterUrl', label: 'Poster URL', type: 'string' },
+              { name: 'backdropUrl', label: 'Backdrop URL', type: 'string' },
+              { name: 'overview', label: 'Overview', type: 'string', ui: { component: 'textarea' } },
+              { name: 'watchProviders', label: 'Watch providers', type: 'string', list: true },
+              { name: 'tmdbUrl', label: 'TMDB URL', type: 'string' },
+            ],
+          },
+          {
+            name: 'audio',
+            label: 'Audio narration (optional)',
+            type: 'object',
+            fields: [
+              { name: 'url', label: 'Audio URL', type: 'string' },
+              { name: 'voice', label: 'Voice', type: 'string' },
             ],
           },
           {

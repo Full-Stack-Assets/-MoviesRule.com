@@ -154,7 +154,7 @@ export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
 
     let content: string;
     try {
-      content = await callLlm(key, model, userPrompt);
+      content = await callLlm(key, SYSTEM_PROMPT, userPrompt);
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
       // Back off on transient upstream errors (overload / rate limit) so a brief
@@ -187,7 +187,7 @@ export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
   );
 }
 
-async function callLlm(key: string, model: string, userPrompt: string): Promise<string> {
+export async function callLlm(key: string, systemPrompt: string, userPrompt: string): Promise<string> {
   const res = await fetch(LLM_URL, {
     method: 'POST',
     headers: {
@@ -200,7 +200,7 @@ async function callLlm(key: string, model: string, userPrompt: string): Promise<
       max_tokens: 4096,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
     }),
