@@ -139,7 +139,7 @@ export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
 
     let content: string;
     try {
-      content = await callLlm(key, userPrompt);
+      content = await callLlm(key, SYSTEM_PROMPT, userPrompt);
     } catch (err) {
       // Rate limit / 5xx / network blip — worth another attempt.
       lastError = err instanceof Error ? err.message : String(err);
@@ -168,7 +168,7 @@ export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
   );
 }
 
-async function callLlm(key: string, userPrompt: string): Promise<string> {
+export async function callLlm(key: string, systemPrompt: string, userPrompt: string): Promise<string> {
   const res = await fetch(LLM_URL, {
     method: 'POST',
     headers: {
@@ -181,7 +181,7 @@ async function callLlm(key: string, userPrompt: string): Promise<string> {
       max_tokens: 4096,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
     }),

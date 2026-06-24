@@ -11,6 +11,7 @@ import { generate } from './generate';
 import { pickImage } from './image';
 import { serialize } from './serialize';
 import { loadTopicLog, saveTopicLog, commitPost } from './github';
+import { runReviewPipeline } from './review-pipeline';
 import type { RawItem, TopicLog } from './types';
 
 export interface PipelineResult {
@@ -18,6 +19,8 @@ export interface PipelineResult {
   slug?: string;
   path?: string;
   winner?: { title: string; url: string; score: number };
+  /** Topic-log dedup signature for what was produced (used by local runs). */
+  signature?: string;
   skipped?: string;
   error?: string;
   timings: Record<string, number>;
@@ -28,9 +31,15 @@ export interface PipelineOptions {
   dryRun?: boolean;
   /** Override the topic log (useful for local runs). */
   topicLog?: TopicLog;
+  /** 'news' (default) runs the editorial pipeline; 'review' runs the film-review pipeline. */
+  mode?: 'news' | 'review';
 }
 
 export async function runPipeline(opts: PipelineOptions = {}): Promise<PipelineResult & { mdx?: string }> {
+  if (opts.mode === 'review') {
+    return runReviewPipeline(opts);
+  }
+
   const timings: Record<string, number> = {};
   const t = (label: string) => {
     const start = Date.now();

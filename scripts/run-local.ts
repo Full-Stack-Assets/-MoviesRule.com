@@ -35,12 +35,15 @@ async function saveLocalLog(log: TopicLog): Promise<void> {
 
 async function main() {
   const dryRun = process.argv.includes('--dry');
+  const review = process.argv.includes('--review');
   const topicLog = await loadLocalLog();
 
-  console.log(`→ Running pipeline (${dryRun ? 'DRY RUN' : 'writing to disk'})…`);
+  console.log(
+    `→ Running ${review ? 'REVIEW' : 'news'} pipeline (${dryRun ? 'DRY RUN' : 'writing to disk'})…`
+  );
   console.log(`→ Existing topic log: ${topicLog.topics.length} entries\n`);
 
-  const result = await runPipeline({ dryRun: true, topicLog });
+  const result = await runPipeline({ dryRun: true, topicLog, mode: review ? 'review' : undefined });
 
   console.log('\n─── Result ───');
   console.log(JSON.stringify({ ...result, mdx: result.mdx ? `[${result.mdx.length} bytes]` : undefined }, null, 2));
@@ -69,7 +72,7 @@ async function main() {
           title: result.winner.title,
           url: result.winner.url,
           publishedAt: new Date().toISOString(),
-          signature: signature(result.winner.title),
+          signature: result.signature ?? signature(result.winner.title),
         },
       ],
     });
