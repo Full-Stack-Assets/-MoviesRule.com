@@ -79,7 +79,10 @@ export const siteConfig = {
   // ── Engine: writer LLM (Google Gemini, OpenAI-compatible) ─────
   llm: {
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-    model: 'gemini-2.5-flash',
+    model: 'gemini-flash-latest',
+    // Tried when the primary model returns a transient error (e.g. 503 overload).
+    // Pin a stable GA model so a brief spike on the '-latest' alias doesn't fail the run.
+    fallbackModel: 'gemini-2.0-flash',
     apiKeyEnv: 'GEMINI_API_KEY',
   },
 

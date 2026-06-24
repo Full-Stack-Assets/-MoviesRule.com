@@ -77,5 +77,31 @@ jobs:
 
           git commit -m "post: $(date -u +%Y-%m-%dT%H:00Z) hourly dispatch"
 
-          # The remote may have advanced since checkout (concurrent runs,
-          # re-runs on a stale SHA, or other merges to main). Rebase onto the*
+          # Push the new post. The remote can advance between checkout and push
+          # (a re-run on a stale SHA, or a manual commit), so on rejection rebase
+          # onto the latest main — the union merge driver resolves the only file
+          # two runs can both touch (the topic log) — and retry a few times.
+          branch="${GITHUB_REF_NAME:-main}"
+          for attempt in 1 2 3 4 5; do
+            if git push origin "HEAD:${branch}"; then
+              echo "Pushed on attempt ${attempt}."
+              # Trigger a Vercel production redeploy for the new post (non-fatal).
+              if [ -n "${VERCEL_DEPLOY_HOOK_URL}" ] && [ "${branch}" = "${PRODUCTION_BRANCH}" ]; then
+                if curl -fsS -m 30 --retry 3 -X POST "${VERCEL_DEPLOY_HOOK_URL}" >/dev/null; then
+                  echo "Vercel redeploy triggered."
+                else
+                  echo "Vercel deploy hook call failed (non-fatal)." >&2
+                fi
+              fi
+              exit 0
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/${branch} and retrying..."
+            git fetch origin "${branch}"
+            if ! git rebase "origin/${branch}"; then
+              echo "Rebase did not complete cleanly; aborting this attempt." >&2
+              git rebase --abort || true
+            fi
+          done
+
+          echo "Failed to push after multiple attempts." >&2
+          exit 1
