@@ -158,10 +158,9 @@ async function main() {
         continue;
       }
 
-      // Spread dates across the recent past so the catalog looks natural and
-      // every seeded post is immediately published (no future dates).
-      const date = new Date(now - (i + 1) * 36 * 3_600_000); // ~1.5 days apart
-      const mdx = serialize(post, date);
+      // serialize() stamps the date itself (publish time); seeded posts are
+      // published immediately.
+      const mdx = serialize(post);
 
       if (!DRY) await fs.writeFile(path.join(POSTS_DIR, file), mdx, 'utf8');
       existing.add(file);
