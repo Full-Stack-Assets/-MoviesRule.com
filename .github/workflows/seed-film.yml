@@ -1,0 +1,67 @@
+name: Seed Film Content
+
+# Manually-triggered backfill that generates evergreen film/cinema/media posts
+# via the LLM (research-free) and commits them. Uses Gemini (+ Groq fallback);
+# no Brave needed. Run once to populate the catalog, or again to top it up
+# (existing slugs are skipped).
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Max posts to generate this run (blank = all remaining topics)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seed-film-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate film posts
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          if [ -n "${{ github.event.inputs.limit }}" ]; then
+            npx tsx scripts/seed-film.ts --limit=${{ github.event.inputs.limit }}
+          else
+            npx tsx scripts/seed-film.ts
+          fi
+      - name: Commit and push
+        run: |
+          git config user.name "trendblog-bot"
+          git config user.email "bot@trendblog.dev"
+          git config merge.topiclog.name "union topic log entries"
+          git config merge.topiclog.driver "node scripts/merge-topic-log.mjs %O %A %B"
+          git add content/posts
+          if git diff --cached --quiet; then
+            echo "No new film posts generated."
+            exit 0
+          fi
+          git commit -m "content: seed evergreen film/cinema posts"
+          branch="${GITHUB_REF_NAME:-main}"
+          for attempt in 1 2 3 4 5; do
+            if git push origin "HEAD:${branch}"; then
+              echo "Pushed on attempt ${attempt}."
+              exit 0
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing and retrying..."
+            git fetch origin "${branch}"
+            git rebase "origin/${branch}" || git rebase --abort || true
+          done
+          echo "Failed to push after multiple attempts." >&2
+          exit 1

@@ -10,25 +10,9 @@ const LLM_KEY_ENV = siteConfig.llm.apiKeyEnv;
 /** How many times to ask the model before giving up on a structurally valid post. */
 const MAX_GENERATION_ATTEMPTS = 5;
 
-/** Models to cycle across attempts: primary first, then the fallback (if set and
- *  different) — so a single overloaded model (frequent Gemini 503s) can't sink the run. */
-const MODELS: string[] =
-  LLM_FALLBACK_MODEL && LLM_FALLBACK_MODEL !== LLM_MODEL
-    ? [LLM_MODEL, LLM_FALLBACK_MODEL]
-    : [LLM_MODEL];
-
-const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-/** True for transient upstream failures worth backing off and retrying:
- *  model overload (503), rate limit (429), other 5xx, or a network blip. */
-function isTransientLlmError(err: unknown): boolean {
-  const m = err instanceof Error ? err.message : String(err);
-  return /API error\s+(429|5\d\d)/.test(m) || /fetch failed|ETIMEDOUT|ECONNRESET|network/i.test(m);
-}
-
-/** Exponential backoff with jitter, capped at 20s — give an overloaded model time to recover. */
-function backoffMs(attempt: number): number {
-  return Math.min(20_000, 1000 * 2 ** attempt) + Math.floor(Math.random() * 500);
+/** Pause helper for backing off between retries. */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -143,8 +127,14 @@ HARD RULES:
 - Do not wrap the JSON in markdown code fences.`;
 
 export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
-  const key = process.env[LLM_KEY_ENV];
-  if (!key) throw new Error(`${LLM_KEY_ENV} not set`);
+  const primaryKey = process.env[PRIMARY_LLM.apiKeyEnv];
+  if (!primaryKey) throw new Error(`${PRIMARY_LLM.apiKeyEnv} not set`);
+  const fallbackKey = FALLBACK_LLM ? (process.env[FALLBACK_LLM.apiKeyEnv] ?? '').trim() : '';
+
+  // Start on the primary provider; fail over to the backup on transient errors.
+  let provider = PRIMARY_LLM;
+  let providerKey = primaryKey;
+  let failedOver = false;
 
   const baseUserPrompt = buildUserPrompt(bundle);
   let lastError = '';

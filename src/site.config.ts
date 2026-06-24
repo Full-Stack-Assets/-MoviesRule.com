@@ -13,13 +13,35 @@ export const siteConfig = {
 
   // ── Niche sources ─────────────────────────────────────────────
   sources: {
-    subreddits: ['movies', 'boxoffice', 'television', 'NetflixBestOf', 'MovieSuggestions', 'truefilm'],
+    // Broadened to cover movies, film and cinema widely: mainstream releases,
+    // box office, arthouse/indie & festival cinema, filmmaking craft, and reviews.
+    subreddits: [
+      'movies',
+      'boxoffice',
+      'television',
+      'NetflixBestOf',
+      'MovieSuggestions',
+      'truefilm',
+      'criterion',
+      'Filmmakers',
+      'cinematography',
+      'MovieDetails',
+      'Letterboxd',
+      'flicks',
+      'horror',
+      'oscarrace',
+    ],
     rssFeeds: [
       'https://variety.com/v/film/feed/',
       'https://www.hollywoodreporter.com/feed/',
       'https://collider.com/feed/',
       'https://www.indiewire.com/feed/',
       'https://www.slashfilm.com/feed/',
+      'https://deadline.com/feed/',
+      'https://screenrant.com/feed/',
+      'https://www.thewrap.com/feed/',
+      'https://www.rogerebert.com/feed/',
+      'https://www.firstshowing.net/feed/',
     ],
     braveQueries: [
       'new movie trailer',
@@ -27,6 +49,14 @@ export const siteConfig = {
       'streaming release date',
       'box office results',
       'film casting news',
+      'upcoming movie release date',
+      'film festival premiere',
+      'movie sequel announcement',
+      'director new film project',
+      'indie film news',
+      'movie franchise update',
+      'Oscar awards season',
+      'film adaptation announcement',
     ],
     // Google Trends' "Trending now" feed is general-interest (sports, weather,
     // celebrities…). Only surface a trend when its term or related headlines
@@ -38,6 +68,8 @@ export const siteConfig = {
       'oscar', 'oscars', 'academy award', 'golden globe', 'sequel', 'prequel', 'reboot', 'remake',
       'casting', 'director', 'actor', 'actress', 'premiere', 'cinema', 'movie theater',
       'tv series', 'miniseries', 'tv show', 'new season', 'final season', 'episode', 'showtime', 'documentary',
+      'film festival', 'cannes', 'sundance', 'venice film festival', 'screening', 'rotten tomatoes', 'imax',
+      'blockbuster', 'indie film', 'biopic', 'screenplay', 'film score', 'box office record', 'movie franchise',
     ],
   },
 
@@ -52,6 +84,15 @@ export const siteConfig = {
     // Pin a stable GA model so a brief spike on the '-latest' alias doesn't fail the run.
     fallbackModel: 'gemini-2.0-flash',
     apiKeyEnv: 'GEMINI_API_KEY',
+  },
+
+  // Automatic failover: when Gemini returns transient 5xx / "overloaded" (503)
+  // errors, generate.ts retries the request against this OpenAI-compatible
+  // backup. Skipped when GROQ_API_KEY isn't set. Groq's free tier is fast.
+  llmFallback: {
+    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    model: 'llama-3.3-70b-versatile',
+    apiKeyEnv: 'GROQ_API_KEY',
   },
 
   // ── Engine: hero images ('pexels' | 'openverse' | 'none') ─────
