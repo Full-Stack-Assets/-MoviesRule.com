@@ -3,11 +3,33 @@ import type { ResearchBundle, GeneratedPost } from './types';
 import { siteConfig } from '@/site.config';
 
 const LLM_URL = siteConfig.llm.endpoint;
-const LLM_MODEL = siteConfig.llm.model;
+const LLM_MODEL: string = siteConfig.llm.model;
+const LLM_FALLBACK_MODEL: string | undefined = siteConfig.llm.fallbackModel;
 const LLM_KEY_ENV = siteConfig.llm.apiKeyEnv;
 
 /** How many times to ask the model before giving up on a structurally valid post. */
-const MAX_GENERATION_ATTEMPTS = 3;
+const MAX_GENERATION_ATTEMPTS = 5;
+
+/** Models to cycle across attempts: primary first, then the fallback (if set and
+ *  different) — so a single overloaded model (frequent Gemini 503s) can't sink the run. */
+const MODELS: string[] =
+  LLM_FALLBACK_MODEL && LLM_FALLBACK_MODEL !== LLM_MODEL
+    ? [LLM_MODEL, LLM_FALLBACK_MODEL]
+    : [LLM_MODEL];
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** True for transient upstream failures worth backing off and retrying:
+ *  model overload (503), rate limit (429), other 5xx, or a network blip. */
+function isTransientLlmError(err: unknown): boolean {
+  const m = err instanceof Error ? err.message : String(err);
+  return /API error\s+(429|5\d\d)/.test(m) || /fetch failed|ETIMEDOUT|ECONNRESET|network/i.test(m);
+}
+
+/** Exponential backoff with jitter, capped at 20s — give an overloaded model time to recover. */
+function backoffMs(attempt: number): number {
+  return Math.min(20_000, 1000 * 2 ** attempt) + Math.floor(Math.random() * 500);
+}
 
 /**
  * Collapse whitespace and truncate to at most `max` chars at a word boundary,
@@ -137,12 +159,19 @@ export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
         ? baseUserPrompt
         : `${baseUserPrompt}\n\nYour previous response was rejected: ${lastError}\nReturn a corrected JSON object that satisfies every constraint exactly.`;
 
+    // Cycle models across attempts so one overloaded model can't sink the run.
+    const model = MODELS[(attempt - 1) % MODELS.length];
+
     let content: string;
     try {
-      content = await callLlm(key, userPrompt);
+      content = await callLlm(key, model, userPrompt);
     } catch (err) {
-      // Rate limit / 5xx / network blip — worth another attempt.
       lastError = err instanceof Error ? err.message : String(err);
+      // Back off on transient upstream errors (overload / rate limit) so a brief
+      // spike doesn't fail the whole hourly run; retry immediately otherwise.
+      if (isTransientLlmError(err) && attempt < MAX_GENERATION_ATTEMPTS) {
+        await sleep(backoffMs(attempt));
+      }
       continue;
     }
 
@@ -168,7 +197,7 @@ export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
   );
 }
 
-async function callLlm(key: string, userPrompt: string): Promise<string> {
+async function callLlm(key: string, model: string, userPrompt: string): Promise<string> {
   const res = await fetch(LLM_URL, {
     method: 'POST',
     headers: {
@@ -176,7 +205,7 @@ async function callLlm(key: string, userPrompt: string): Promise<string> {
       authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: LLM_MODEL,
+      model,
       temperature: 0.5,
       max_tokens: 4096,
       response_format: { type: 'json_object' },
