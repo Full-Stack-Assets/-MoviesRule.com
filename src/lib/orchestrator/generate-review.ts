@@ -101,7 +101,7 @@ export async function generateReview(
 
     let content: string;
     try {
-      content = await callLlm(key, SYSTEM_PROMPT, userPrompt);
+      content = await callLlm(siteConfig.llm, key, SYSTEM_PROMPT, userPrompt);
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
       continue;
