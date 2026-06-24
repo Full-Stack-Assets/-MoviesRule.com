@@ -2,13 +2,14 @@ import type { GeneratedPost } from './types';
 
 /**
  * Serialize a GeneratedPost into a complete MDX file with YAML frontmatter.
- * The shape matches the TinaCMS schema in tina/config.ts.
+ * The shape matches the TinaCMS schema in tina/config.ts. `date` defaults to now
+ * for live runs; the seed generator passes an explicit (back-dated) date.
  */
-export function serialize(post: GeneratedPost): string {
+export function serialize(post: GeneratedPost, date: Date = new Date()): string {
   const fm = {
     title: post.title,
     description: post.description,
-    date: new Date().toISOString(),
+    date: date.toISOString(),
     category: post.category,
     tags: post.tags,
     hero: {
