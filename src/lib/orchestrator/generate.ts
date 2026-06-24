@@ -3,11 +3,17 @@ import type { ResearchBundle, GeneratedPost } from './types';
 import { siteConfig } from '@/site.config';
 
 const LLM_URL = siteConfig.llm.endpoint;
-const LLM_MODEL = siteConfig.llm.model;
+const LLM_MODEL: string = siteConfig.llm.model;
+const LLM_FALLBACK_MODEL: string | undefined = siteConfig.llm.fallbackModel;
 const LLM_KEY_ENV = siteConfig.llm.apiKeyEnv;
 
 /** How many times to ask the model before giving up on a structurally valid post. */
-const MAX_GENERATION_ATTEMPTS = 3;
+const MAX_GENERATION_ATTEMPTS = 5;
+
+/** Pause helper for backing off between retries. */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * Collapse whitespace and truncate to at most `max` chars at a word boundary,
@@ -121,8 +127,14 @@ HARD RULES:
 - Do not wrap the JSON in markdown code fences.`;
 
 export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
-  const key = process.env[LLM_KEY_ENV];
-  if (!key) throw new Error(`${LLM_KEY_ENV} not set`);
+  const primaryKey = process.env[PRIMARY_LLM.apiKeyEnv];
+  if (!primaryKey) throw new Error(`${PRIMARY_LLM.apiKeyEnv} not set`);
+  const fallbackKey = FALLBACK_LLM ? (process.env[FALLBACK_LLM.apiKeyEnv] ?? '').trim() : '';
+
+  // Start on the primary provider; fail over to the backup on transient errors.
+  let provider = PRIMARY_LLM;
+  let providerKey = primaryKey;
+  let failedOver = false;
 
   const baseUserPrompt = buildUserPrompt(bundle);
   let lastError = '';
@@ -137,12 +149,19 @@ export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
         ? baseUserPrompt
         : `${baseUserPrompt}\n\nYour previous response was rejected: ${lastError}\nReturn a corrected JSON object that satisfies every constraint exactly.`;
 
+    // Cycle models across attempts so one overloaded model can't sink the run.
+    const model = MODELS[(attempt - 1) % MODELS.length];
+
     let content: string;
     try {
       content = await callLlm(key, SYSTEM_PROMPT, userPrompt);
     } catch (err) {
-      // Rate limit / 5xx / network blip — worth another attempt.
       lastError = err instanceof Error ? err.message : String(err);
+      // Back off on transient upstream errors (overload / rate limit) so a brief
+      // spike doesn't fail the whole hourly run; retry immediately otherwise.
+      if (isTransientLlmError(err) && attempt < MAX_GENERATION_ATTEMPTS) {
+        await sleep(backoffMs(attempt));
+      }
       continue;
     }
 
@@ -176,7 +195,7 @@ export async function callLlm(key: string, systemPrompt: string, userPrompt: str
       authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: LLM_MODEL,
+      model,
       temperature: 0.5,
       max_tokens: 4096,
       response_format: { type: 'json_object' },
