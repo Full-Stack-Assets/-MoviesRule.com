@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { ResearchBundle, GeneratedPost } from './types';
 import { siteConfig } from '@/site.config';
+import { mdxCompileError } from './mdx-validate';
 
 type LlmProvider = { endpoint: string; model: string; apiKeyEnv: string };
 
@@ -189,7 +190,17 @@ export async function generate(bundle: ResearchBundle): Promise<GeneratedPost> {
 
     const result = PostSchema.safeParse(parsed);
     if (result.success) {
-      return finalize(result.data, bundle);
+      // Structurally valid — but a malformed component tag (e.g. `<P rosCons>`)
+      // can still pass the schema and then break the production build the moment
+      // Next prerenders the page. Compile the body through the site's own MDX
+      // pipeline; on failure, retry with the compiler error fed back so a body
+      // that won't render never reaches commit.
+      const compileErr = await mdxCompileError(result.data.body);
+      if (!compileErr) {
+        return finalize(result.data, bundle);
+      }
+      lastError = `body is not valid MDX and will not render: ${compileErr}`;
+      continue;
     }
     lastError = result.error.issues
       .map((i) => `${i.path.join('.') || 'root'} — ${i.message}`)

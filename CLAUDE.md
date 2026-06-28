@@ -72,7 +72,7 @@ sources/*  →  score  →  dedupe  →  pickWinner  →  research  →  generat
 | Dedupe | `score.ts` | `signature()` = sorted-token hash of the title, so reworded headlines collapse together. |
 | Pick winner | `score.ts → pickWinner` | Highest scorer whose signature isn't already in the topic log. |
 | Research | `research.ts` | Scrapes the winner URL + Brave results (Cheerio) and YouTube transcripts. |
-| Generate | `generate.ts` | Calls the LLM with the strict system prompt; validates with `PostSchema`; retries up to 3×. |
+| Generate | `generate.ts` | Calls the LLM with the strict system prompt; validates with `PostSchema` and compiles the body as MDX (`mdx-validate.ts`); retries on failure. |
 | Image | `image.ts` | Picks a hero image (Pexels / Openverse / none per `site.config`). |
 | Serialize | `serialize.ts` | Renders `GeneratedPost` → MDX file with YAML frontmatter; sanitizes quotes. |
 | Commit | `github.ts` | `commitPost` writes the MDX, `saveTopicLog` appends to `content/.topic-log.json` (capped 500). |
@@ -124,6 +124,17 @@ description, slug) are repaired by Zod `.transform()`s (`clampMeta`, `slugify`,
 Only genuinely unrepairable misses (body < 800 chars, < 2 tags, malformed JSON)
 trigger a retry with the exact error fed back to the model. Keep this pattern if
 you touch the schema: heal what's safe, retry on what isn't, never fake content.
+
+After the schema passes, the body is also **compiled through the site's own MDX
+pipeline** (`mdxCompileError` in `src/lib/orchestrator/mdx-validate.ts`, used by
+both `generate.ts` and `generate-review.ts`). A body that parses as JSON and
+satisfies the schema can still contain MDX the renderer rejects — e.g. a
+malformed component tag like `<P rosCons>` — which would otherwise pass
+generation and then abort the *production build* at prerender time (one bad post
+breaks the whole deploy). A compile failure is treated like any other
+unrepairable miss: retry with the compiler's error fed back. The compiler is
+loaded via a dynamic `import()` because `next-mdx-remote/serialize` is ESM-only
+and a static import would crash the `tsx`-run pipeline at load time.
 
 ## Frontmatter shape
 
