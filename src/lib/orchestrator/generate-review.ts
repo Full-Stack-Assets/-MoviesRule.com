@@ -3,6 +3,7 @@ import type { GeneratedPost } from './types';
 import type { FilmFacts } from '../reviews';
 import { siteConfig } from '@/site.config';
 import { clampMeta, slugify, normalizeTags, callLlm } from './generate';
+import { mdxCompileError } from './mdx-validate';
 
 const LLM_KEY_ENV = siteConfig.llm.apiKeyEnv;
 const MAX_GENERATION_ATTEMPTS = 3;
@@ -117,7 +118,15 @@ export async function generateReview(
 
     const result = ReviewSchema.safeParse(parsed);
     if (result.success) {
-      return finalize(result.data, film, critique);
+      // A malformed component tag can pass the schema yet break the production
+      // build at prerender time. Compile the body through the site's own MDX
+      // pipeline and retry with the error fed back if it won't render.
+      const compileErr = await mdxCompileError(result.data.body);
+      if (!compileErr) {
+        return finalize(result.data, film, critique);
+      }
+      lastError = `body is not valid MDX and will not render: ${compileErr}`;
+      continue;
     }
     lastError = result.error.issues
       .map((i) => `${i.path.join('.') || 'root'} — ${i.message}`)
