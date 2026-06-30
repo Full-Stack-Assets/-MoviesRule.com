@@ -7,6 +7,8 @@ import { mdxComponents } from '@/components/mdx';
 import { articleJsonLd, faqJsonLd, breadcrumbJsonLd, SITE_URL, SITE_NAME } from '@/lib/structured-data';
 import { AdSlot } from '@/components/AdSlot';
 import { ADSENSE_SLOT_IN_ARTICLE } from '@/lib/ads';
+import { WhereToWatch } from '@/components/WhereToWatch';
+import { watchContextFor } from '@/lib/affiliate';
 
 export const revalidate = 300;
 
@@ -128,6 +130,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       <div className="prose-editorial">
         <MDXRemote source={body} components={mdxComponents} />
       </div>
+
+      {/* Where to watch — affiliate rail for film-content posts (null otherwise) */}
+      {(() => {
+        const watch = watchContextFor(frontmatter);
+        return watch ? <WhereToWatch ctx={watch} /> : null;
+      })()}
 
       {/* In-article ad (renders only when AdSense is configured) */}
       <AdSlot

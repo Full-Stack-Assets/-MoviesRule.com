@@ -1,4 +1,5 @@
 import type { Post } from './posts';
+import type { FilmFacts } from './reviews';
 import { siteConfig } from '@/site.config';
 
 // Fall back to the configured URL when the env var is unset OR an empty string.
@@ -73,6 +74,53 @@ export function websiteJsonLd(): Record<string, unknown> {
     url: SITE_URL,
     description: SITE_DESCRIPTION,
     publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+  };
+}
+
+/**
+ * Movie JSON-LD for a "where to watch" page. Models the film as a schema.org
+ * Movie so search/answer engines can resolve the entity and (with the provider
+ * list) surface watch options. Score, when present, becomes an aggregateRating.
+ */
+export function movieJsonLd(
+  film: FilmFacts,
+  opts: { url: string; score?: number }
+): Record<string, unknown> {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Movie',
+    name: film.title,
+    url: opts.url,
+  };
+  if (film.year) schema.datePublished = String(film.year);
+  if (film.releaseDate) schema.datePublished = film.releaseDate;
+  if (film.director) schema.director = { '@type': 'Person', name: film.director };
+  if (film.cast?.length) schema.actor = film.cast.map((name) => ({ '@type': 'Person', name }));
+  if (film.genres?.length) schema.genre = film.genres;
+  if (film.overview) schema.description = film.overview;
+  if (film.posterUrl) schema.image = film.posterUrl;
+  if (typeof opts.score === 'number') {
+    schema.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: Math.round(opts.score) / 20, // 0–100 → 0–5
+      bestRating: 5,
+      worstRating: 0,
+      ratingCount: 1,
+    };
+  }
+  return schema;
+}
+
+/** Generic FAQPage JSON-LD from an explicit Q/A list (used by where-to-watch pages). */
+export function faqListJsonLd(faqs: Array<{ question: string; answer: string }>): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
   };
 }
 

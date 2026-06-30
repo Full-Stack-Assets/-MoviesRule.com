@@ -33,6 +33,16 @@ export function isReview(post: Post): boolean {
   return post.frontmatter.type === 'review';
 }
 
+/**
+ * Published film reviews that carry TMDB film facts. This is the set that backs
+ * the programmatic "where to watch" pages — each needs a real film entity and a
+ * companion review, so the page is never thin. Empty until the reviews layer
+ * (TMDB_API_KEY) is producing structured reviews.
+ */
+export async function listReviews(): Promise<Post[]> {
+  return (await listPosts()).filter((p) => p.frontmatter.type === 'review' && Boolean(p.frontmatter.film));
+}
+
 const POSTS_DIR = path.join(process.cwd(), 'content', 'posts');
 
 export async function listPosts(): Promise<Post[]> {

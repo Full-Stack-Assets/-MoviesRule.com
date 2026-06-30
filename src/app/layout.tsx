@@ -7,6 +7,7 @@ import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, websiteJsonLd } from '@/lib/stru
 import { SubscribeForm } from '@/components/SubscribeForm';
 import { AdSlot } from '@/components/AdSlot';
 import { ADSENSE_CLIENT, ADSENSE_SLOT_FOOTER } from '@/lib/ads';
+import { AFFILIATE_ENABLED } from '@/lib/affiliate';
 import { siteConfig } from '@/site.config';
 import './globals.css';
 
@@ -89,6 +90,7 @@ function Header() {
           {siteConfig.navCategories.map((c) => (
             <Link key={c} href={`/categories/${c}`} className="hover:text-accent transition-colors">{navLabel(c)}</Link>
           ))}
+          <Link href="/where-to-watch" className="hover:text-accent transition-colors">Watch</Link>
           <Link href="/about" className="hover:text-accent transition-colors">About</Link>
           <Link href="/stats" className="hover:text-accent transition-colors">Stats</Link>
           <a href="/feed.xml" className="hover:text-accent transition-colors" title="RSS Feed">
@@ -129,6 +131,13 @@ function Footer() {
           <Link href="/about" className="underline hover:text-accent">Read how this works</Link> —
           corrections are welcome.
         </p>
+        {AFFILIATE_ENABLED && (
+          <p className="mt-3 max-w-3xl text-xs leading-relaxed text-muted/80">
+            Affiliate disclosure: some &ldquo;where to watch&rdquo; links are affiliate links. If
+            you sign up or buy through them, {siteConfig.name} may earn a commission at no extra
+            cost to you. This never influences our reviews, scores, or what we choose to cover.
+          </p>
+        )}
       </div>
     </footer>
   );
