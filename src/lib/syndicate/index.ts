@@ -1,6 +1,7 @@
 import { SITE_URL } from '../structured-data';
 import { postToBluesky } from './bluesky';
 import { postToMastodon } from './mastodon';
+import { postToTelegram } from './telegram';
 import { crossPostToDevTo } from './devto';
 import type { AdapterResult, SyndicationPost, SyndicationResult } from './types';
 
@@ -21,6 +22,9 @@ export async function syndicate(post: SyndicationPost): Promise<SyndicationResul
   return Promise.all([
     runAdapter('bluesky', () => postToBluesky(blurb, url)),
     runAdapter('mastodon', () => postToMastodon(blurb)),
+    // Telegram — movies-audience channel broadcast (replaces Dev.to as the
+    // niche-fit channel; Dev.to stays available but is dev-audience, off by default).
+    runAdapter('telegram', () => postToTelegram(blurb)),
     runAdapter('devto', () => crossPostToDevTo(post, url)),
   ]);
 }
