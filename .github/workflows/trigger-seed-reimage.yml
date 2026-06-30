@@ -19,6 +19,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -34,13 +36,26 @@ jobs:
         run: |
           git config user.name "trendblog-bot"
           git config user.email "bot@trendblog.dev"
+          git config merge.topiclog.name "union topic log entries"
+          git config merge.topiclog.driver "node scripts/merge-topic-log.mjs %O %A %B"
           git add content/posts
           if git diff --cached --quiet; then
             echo "No new film posts generated."
             exit 0
           fi
           git commit -m "content: seed 30 evergreen film/cinema posts"
-          git push origin HEAD:main
+          branch=main
+          for attempt in 1 2 3 4 5; do
+            if git push origin "HEAD:${branch}"; then
+              echo "Pushed on attempt ${attempt}."
+              exit 0
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing and retrying..."
+            git fetch origin "${branch}"
+            git rebase "origin/${branch}" || git rebase --abort || true
+          done
+          echo "Failed to push after multiple attempts." >&2
+          exit 1
 
   reimage:
     needs: seed
@@ -79,4 +94,5 @@ jobs:
             git fetch origin "${branch}"
             git rebase "origin/${branch}" || git rebase --abort || true
           done
+          echo "Failed to push after multiple attempts." >&2
           exit 1
