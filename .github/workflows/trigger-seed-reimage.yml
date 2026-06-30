@@ -1,0 +1,82 @@
+name: Trigger Seed and Reimage
+
+# One-shot runner: push to cursor/run-seed-reimage-4457 to backfill posts then refresh images.
+on:
+  push:
+    branches:
+      - cursor/run-seed-reimage-4457
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trigger-seed-reimage
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate 30 film posts
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: npx tsx scripts/seed-film.ts --limit=30
+      - name: Commit seed posts
+        run: |
+          git config user.name "trendblog-bot"
+          git config user.email "bot@trendblog.dev"
+          git add content/posts
+          if git diff --cached --quiet; then
+            echo "No new film posts generated."
+            exit 0
+          fi
+          git commit -m "content: seed 30 evergreen film/cinema posts"
+          git push origin HEAD:main
+
+  reimage:
+    needs: seed
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Re-image all posts
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: npx tsx scripts/reimage.ts
+      - name: Commit image updates
+        run: |
+          git config user.name "trendblog-bot"
+          git config user.email "bot@trendblog.dev"
+          git add content/posts
+          if git diff --cached --quiet; then
+            echo "No image changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: refresh hero images for accuracy"
+          branch=main
+          for attempt in 1 2 3 4 5; do
+            if git push origin "HEAD:${branch}"; then
+              echo "Pushed on attempt ${attempt}."
+              exit 0
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing and retrying..."
+            git fetch origin "${branch}"
+            git rebase "origin/${branch}" || git rebase --abort || true
+          done
+          exit 1
