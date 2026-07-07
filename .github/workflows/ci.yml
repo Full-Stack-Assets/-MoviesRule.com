@@ -1,0 +1,62 @@
+name: CI
+
+# Quality gate: type-check, lint, unit tests, and a full production build on
+# every PR and every push to main. This is the safety net that catches the
+# classes of failure that have reached production before — a broken merge, a
+# malformed MDX post, a type error — *before* they hit a deploy.
+#
+# Content-only pushes (the hourly pipeline committing under content/) skip CI:
+# there's no code to test, and the pre-commit MDX-compile guard already runs in
+# the generation pipeline.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'content/**'
+      - 'docs/**'
+      - '**/*.md'
+  pull_request:
+    paths-ignore:
+      - 'content/**'
+      - 'docs/**'
+      - '**/*.md'
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check (app)
+        run: npm run typecheck
+
+      - name: Type-check (tests)
+        run: npm run typecheck:test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+        env:
+          # Keep the build hermetic — the reviews/image/LLM layers all no-op
+          # without their keys, and TinaCMS falls back to self-hosted mode.
+          NEXT_PUBLIC_SITE_URL: https://moviesrule.com
