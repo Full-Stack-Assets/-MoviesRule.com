@@ -2,6 +2,7 @@ import {
   type WatchContext,
   providerLink,
   amazonSearchUrl,
+  amazonBluRayUrl,
   justWatchSearchUrl,
   justWatchHomeUrl,
   VPN_AFFILIATE_URL,
@@ -25,6 +26,7 @@ const NAV_REL = 'nofollow noopener';
 export function WhereToWatch({ ctx }: { ctx: WatchContext }) {
   const { title, providers } = ctx;
   const amazon = title ? amazonSearchUrl(title) : null;
+  const bluRay = title ? amazonBluRayUrl(title) : null;
   const jwUrl = title ? justWatchSearchUrl(title) : justWatchHomeUrl();
   const heading = title ? `Where to watch ${title}` : 'Where to watch';
 
@@ -76,6 +78,11 @@ export function WhereToWatch({ ctx }: { ctx: WatchContext }) {
         {amazon && (
           <a href={amazon} target="_blank" rel={AFF_REL} className="text-ink/80 hover:text-accent">
             Rent or buy on Amazon
+          </a>
+        )}
+        {bluRay && (
+          <a href={bluRay} target="_blank" rel={AFF_REL} className="text-ink/80 hover:text-accent">
+            Own it on Blu-ray / 4K
           </a>
         )}
         {VPN_AFFILIATE_URL && (
