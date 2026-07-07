@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { MDXRemote } from 'next-mdx-remote/rsc';
 import type { Metadata } from 'next';
 import { loadPost, listPosts, relatedPosts } from '@/lib/posts';
-import { mdxComponents } from '@/components/mdx';
+import { ArticleBody } from '@/components/ArticleBody';
 import { articleJsonLd, faqJsonLd, breadcrumbJsonLd, SITE_URL, SITE_NAME } from '@/lib/structured-data';
 import { AdSlot } from '@/components/AdSlot';
 import { ADSENSE_SLOT_IN_ARTICLE } from '@/lib/ads';
 import { WhereToWatch } from '@/components/WhereToWatch';
+import { NewsletterCta } from '@/components/NewsletterCta';
 import { watchContextFor } from '@/lib/affiliate';
 
 export const revalidate = 300;
@@ -113,6 +113,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <img
             src={frontmatter.hero.url}
             alt={frontmatter.hero.alt}
+            fetchPriority="high"
+            decoding="async"
             className="aspect-video w-full object-cover"
           />
           {frontmatter.hero.credit && (
@@ -126,9 +128,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         </figure>
       )}
 
-      {/* Body */}
+      {/* Body — MDX with lazy in-article ad units at the contract's section seams */}
       <div className="prose-editorial">
-        <MDXRemote source={body} components={mdxComponents} />
+        <ArticleBody body={body} />
       </div>
 
       {/* Where to watch — affiliate rail for film-content posts (null otherwise) */}
@@ -202,6 +204,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           </ul>
         </section>
       )}
+
+      {/* Inline newsletter capture — end-of-article readers convert best */}
+      <NewsletterCta />
 
       {/* Back link */}
       <div className="mt-16 border-t border-ink/20 pt-8">
