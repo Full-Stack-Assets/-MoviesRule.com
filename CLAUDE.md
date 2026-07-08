@@ -38,15 +38,27 @@ npm install              # install deps
 npm run dev              # TinaCMS + Next dev server at http://localhost:3000
 npm run build            # scripts/build.sh — conditional Tina build, then next build
 npm start                # serve the production build
-npm run lint             # next lint (eslint)
+npm run lint             # next lint (eslint, next/core-web-vitals)
+
+npm test                 # vitest run — the unit suite (tests/unit/*.test.ts)
+npm run test:watch       # vitest in watch mode
+npm run test:coverage    # unit suite + V8 coverage (./coverage)
+npm run typecheck        # tsc --noEmit over the app
+npm run typecheck:test   # tsc over the tests (tsconfig.test.json)
 
 npm run generate         # run the pipeline, write MDX to content/posts/ (no commit)
 npm run generate -- --dry # dry run: print the generated MDX, write nothing
 npm run digest           # send the newsletter digest (scripts/newsletter-digest.ts)
 ```
 
-There is currently **no test runner**. `scripts/smoke-test.ts` exists but has no
-npm script wired to it; run it with `npx tsx scripts/smoke-test.ts` if needed.
+**Testing & CI.** A Vitest unit suite (`tests/unit/`) covers the pipeline's
+load-bearing contracts — scoring/dedupe, the self-healing `PostSchema`, the
+MDX-compile guard, affiliate/where-to-watch helpers, serialization, and
+structured data. Tests are pure-logic (no React render), `node` env, and
+excluded from the Next build so they can't break a deploy. `.github/workflows/
+ci.yml` gates every PR/push on typecheck → lint → test → build. See
+**`TESTING.md`** for the full map and how to add tests. (`scripts/smoke-test.ts`
+is a separate manual end-to-end probe: `npx tsx scripts/smoke-test.ts`.)
 
 The local runner (`scripts/run-local.ts`) always invokes the pipeline in
 `dryRun: true` mode and writes to disk itself — it never commits via GitHub. The
@@ -218,6 +230,10 @@ historical incident record and references the original stack on purpose.
 - Match the surrounding code's style; comments explain *why*, not *what*.
 - Posts are content, not code — the pipeline owns `content/posts/*.mdx`. Hand-edit
   only for corrections; the seed post is the one deliberately human-written file.
+- Keep the stages pure and testable: when you add a stage or change a
+  schema/contract, pin the invariant with a `tests/unit/*.test.ts` (see
+  `TESTING.md`). Run `npm run typecheck && npm test && npm run build` before
+  pushing — CI (`ci.yml`) enforces the same gate.
 
 ## Working in this repo (agents)
 
