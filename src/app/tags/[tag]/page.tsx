@@ -15,7 +15,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
   const { tag } = await params;
   const description = `Everything tagged “${tag}” on ${SITE_NAME}.`;
-  const url = `${SITE_URL}/tags/${tag}`;
+  const url = `${SITE_URL}/tags/${encodeURIComponent(tag)}`;
   return {
     title: `#${tag}`,
     description,
@@ -72,7 +72,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
             {relatedTags.map((t) => (
               <Link
                 key={t}
-                href={`/tags/${t}`}
+                href={`/tags/${encodeURIComponent(t)}`}
                 className="border border-ink/30 px-3 py-1.5 text-sm hover:border-accent hover:text-accent transition-colors"
               >
                 #{t}

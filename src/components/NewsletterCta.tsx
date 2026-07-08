@@ -1,13 +1,16 @@
 import { SubscribeForm } from '@/components/SubscribeForm';
+import { newsletterConfigured } from '@/lib/newsletter';
 import { siteConfig } from '@/site.config';
 
 /**
  * Inline newsletter capture for article pages — a higher-intent surface than
  * the footer form (readers who reach the end of a post are the ones who
  * convert). Same /api/subscribe backend as the footer SubscribeForm; branding
- * comes from siteConfig per the no-hardcoding rule.
+ * comes from siteConfig per the no-hardcoding rule. Renders nothing when no
+ * newsletter provider is configured — /api/subscribe would 503 on submit.
  */
 export function NewsletterCta() {
+  if (!newsletterConfigured()) return null;
   return (
     <aside
       aria-label="Newsletter signup"

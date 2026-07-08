@@ -182,7 +182,12 @@ async function main() {
   console.log(`\n✓ Done. Wrote ${written} post(s), skipped ${skipped}.`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  // Force-exit on success like run-local.ts/seed-film.ts: the orchestrator can
+  // leave open handles (keep-alive sockets, youtubei.js) that would otherwise
+  // keep the process alive until the workflow times out.
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
