@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { listPosts } from '@/lib/posts';
+import { AdSlot } from '@/components/AdSlot';
+import { ADSENSE_SLOT_LISTING } from '@/lib/ads';
 
 export const revalidate = 300; // re-check content every 5 minutes
 
@@ -16,6 +18,8 @@ export default async function HomePage() {
       ) : (
         <>
           {lead && <LeadStory post={lead} />}
+          {/* Listing ad — renders only when AdSense + this slot id are configured */}
+          <AdSlot slot={ADSENSE_SLOT_LISTING} format="auto" className="mt-16 block" />
           {rest.length > 0 && (
             <div className="mt-20">
               <SectionRule label="More dispatches" />
@@ -72,6 +76,8 @@ function LeadStory({ post }: { post: Awaited<ReturnType<typeof listPosts>>[numbe
             <img
               src={frontmatter.hero.url}
               alt={frontmatter.hero.alt}
+              fetchPriority="high"
+              decoding="async"
               className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.03]"
             />
           </Link>
@@ -106,6 +112,8 @@ function PostCard({ post }: { post: Awaited<ReturnType<typeof listPosts>>[number
           <img
             src={frontmatter.hero.url}
             alt={frontmatter.hero.alt}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </Link>

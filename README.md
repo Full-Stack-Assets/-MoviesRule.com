@@ -95,6 +95,30 @@ show up as soon as `npm run generate` writes them.
 
 ---
 
+## Monetization
+
+Every revenue surface is config/env-gated and renders nothing until you supply
+the corresponding id — the site works ad- and affiliate-free out of the box.
+
+- **AdSense** — set the publisher id (`adsenseClient` in `src/site.config.ts`,
+  overridable via `NEXT_PUBLIC_ADSENSE_CLIENT`). That loads the script, serves
+  `/ads.txt`, and enables Auto Ads. For manual placements, create ad units in
+  AdSense and set the `NEXT_PUBLIC_ADSENSE_SLOT_*` ids (see `.env.example`):
+  two in-article units at the post's section seams, one after the body, one on
+  the homepage listing, one in the footer. Units are lazy-initialized (they
+  don't request an ad until scrolled near the viewport).
+- **Affiliate** — set `NEXT_PUBLIC_AMAZON_ASSOC_TAG` (Amazon Associates) to
+  enable tagged "Rent or buy on Amazon" and "Own it on Blu-ray / 4K" links in
+  the "Where to watch" rail on film posts, and optionally
+  `NEXT_PUBLIC_VPN_AFFILIATE_URL`/`_NAME` for a region-unlock CTA. Earning
+  links carry `rel="sponsored nofollow"` and a disclosure appears automatically
+  whenever one is shown. Never commit real ids — these are env vars.
+- **Newsletter** — set `BUTTONDOWN_API_KEY` to activate the subscribe endpoint;
+  capture forms render in the footer site-wide and inline at the end of every
+  article.
+
+---
+
 ## Deploy
 
 ### Scheduling — GitHub Actions (the hourly tick)

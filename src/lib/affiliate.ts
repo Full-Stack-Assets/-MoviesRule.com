@@ -45,6 +45,12 @@ export function amazonSearchUrl(title: string): string | null {
   return `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=instant-video&tag=${encodeURIComponent(AMAZON_ASSOC_TAG)}`;
 }
 
+/** Amazon physical-media (Blu-ray / 4K) search for a title, tagged. Null when no tag. */
+export function amazonBluRayUrl(title: string): string | null {
+  if (!AMAZON_ASSOC_TAG) return null;
+  return `https://www.amazon.com/s?k=${encodeURIComponent(`${title} blu-ray`)}&i=movies-tv&tag=${encodeURIComponent(AMAZON_ASSOC_TAG)}`;
+}
+
 // Known provider display name (as TMDB returns it) → that platform's own search
 // URL for a title. Deep links per title aren't reliably constructable, but a
 // provider-scoped search is good UX. Matched by normalized substring so

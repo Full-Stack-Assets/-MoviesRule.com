@@ -112,8 +112,9 @@ export async function research(
     )
   ).filter((a): a is NonNullable<typeof a> => a !== null);
 
-  // If winner itself is non-YouTube, also try to scrape it
-  if (winner.source !== 'youtube') {
+  // If winner itself is non-YouTube, also try to scrape it. Topic-driven runs
+  // (generateForTopic) synthesize a winner with an empty url — skip the fetch.
+  if (winner.source !== 'youtube' && winner.url) {
     const w = await scrapeArticle(winner.url);
     if (w) articles.unshift({ url: winner.url, title: w.title || winner.title, content: w.content });
   }
