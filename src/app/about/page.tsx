@@ -36,7 +36,7 @@ export default function AboutPage() {
 
         <h2>The stack</h2>
         <p>
-          Next.js, TinaCMS, Vercel, Google Gemini&rsquo;s free tier, and a lot of free public APIs.
+          Next.js, TinaCMS, Vercel, Groq&rsquo;s free tier, and a lot of free public APIs.
           Total running cost: $0/month.
         </p>
 

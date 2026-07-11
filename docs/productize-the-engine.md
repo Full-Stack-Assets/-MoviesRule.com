@@ -17,7 +17,7 @@ A system that, per niche, turns a one-file config into: hourly sourced + scored 
 researched + LLM-written + schema-validated posts, auto-committed and
 auto-deployed, with SEO structured data, newsletter, social syndication, a TMDB
 reviews layer, and affiliate "where to watch" monetization — **at ~$0 marginal
-hosting cost** (free tiers: Gemini/Groq, Brave, Pexels, GitHub Actions, Vercel).
+hosting cost** (free tiers: Groq, Brave, Pexels, GitHub Actions, Vercel).
 
 The wedge is that last clause. The differentiated promise is **"a self-running,
 monetizing niche site for near-zero running cost."**
@@ -128,7 +128,7 @@ layer is a concrete, hard-to-copy differentiator most "AI blog" tools lack.
    "differentiated, monetizing property," **not** "thin pages at scale." Bake
    E-E-A-T (bylines, methodology, citations, real reviews) into every build or
    churn will be brutal. *This is the #1 thing that kills the business if ignored.*
-2. **Platform/free-tier dependency.** Gemini/Groq/Brave/Pexels/Vercel free-tier
+2. **Platform/free-tier dependency.** Groq/Brave/Pexels/Vercel free-tier
    limits or pricing changes hit COGS and reliability. BYO-key (SaaS) pushes that
    risk to the customer; for DFY/operate, monitor quotas and keep provider
    failover (already built) current.
