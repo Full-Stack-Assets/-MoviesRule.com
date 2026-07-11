@@ -12,9 +12,15 @@ type LlmProvider = { endpoint: string; model: string; apiKeyEnv: string };
 const PRIMARY_LLM: LlmProvider = siteConfig.llm;
 const FALLBACK_LLM: LlmProvider | undefined = (siteConfig as { llmFallback?: LlmProvider }).llmFallback;
 
-/** A transient provider error worth failing over to the backup LLM for. */
+/** A transient provider error worth failing over to the backup LLM for.
+ *  Includes 413 / "request too large": Groq admits a request against the
+ *  per-minute token budget up front, so an over-budget request on the primary
+ *  (8K TPM free tier) is rejected outright — but fits the fallback's 30K TPM. */
 function isAvailabilityError(msg: string): boolean {
-  return /API error (?:429|5\d\d)\b/.test(msg) || /overloaded|unavailable|high demand/i.test(msg);
+  return (
+    /API error (?:413|429|5\d\d)\b/.test(msg) ||
+    /overloaded|unavailable|high demand|too large/i.test(msg)
+  );
 }
 
 /** How many times to ask the model before giving up on a structurally valid post. */
@@ -244,7 +250,11 @@ export async function callLlm(
     body: JSON.stringify({
       model: provider.model,
       temperature: 0.5,
-      max_tokens: 4096,
+      // Groq counts input + requested output against the free-tier TPM budget
+      // at admission (8K/min on the primary model). 3584 keeps prompt + output
+      // inside a single-minute budget; a bigger ask gets the whole request
+      // rejected as 413 "request too large" before the model ever runs.
+      max_tokens: 3584,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },
@@ -290,14 +300,14 @@ function buildUserPrompt(bundle: ResearchBundle, targetWords?: number): string {
     .map(
       (a, i) => `### Source ${i + 1}: ${a.title}
 URL: ${a.url}
-${a.content.slice(0, 4000)}`
+${a.content.slice(0, 2400)}`
     )
     .join('\n\n');
 
   const transcriptBlock = transcripts.length
     ? '\n\n## Video transcripts\n' +
       transcripts
-        .map((t) => `### ${t.title}\n${t.text.slice(0, 3000)}`)
+        .map((t) => `### ${t.title}\n${t.text.slice(0, 1600)}`)
         .join('\n\n')
     : '';
 

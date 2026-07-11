@@ -1,8 +1,8 @@
 name: Seed Film Content
 
 # Manually-triggered backfill that generates evergreen film/cinema/media posts
-# via the LLM (research-free) and commits them. Uses Groq (llama-3.3-70b, with an
-# 8b-instant fallback on the same key);
+# via the LLM (research-free) and commits them. Uses Groq (openai/gpt-oss-120b,
+# with a meta-llama/llama-4-scout-17b-16e-instruct fallback on the same key);
 # no Brave needed. Run once to populate the catalog, or again to top it up
 # (existing slugs are skipped).
 on:

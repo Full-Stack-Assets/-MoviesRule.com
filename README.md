@@ -70,7 +70,9 @@ cp .env.example .env.local
 | `CRON_SECRET` | `openssl rand -hex 32` | — |
 
 The writer LLM defaults to **Groq** (`openai/gpt-oss-120b`, with an
-automatic `openai/gpt-oss-20b` fallback on the same key). To switch to
+automatic `meta-llama/llama-4-scout-17b-16e-instruct` fallback on the same
+key — the primary's free tier caps at 8K tokens/minute; Scout's 30K TPM cap
+gives failover real headroom). To switch to
 OpenRouter, change the `llm` block in `src/site.config.ts` and set the matching
 key (`OPENROUTER_API_KEY`). Brave, Pexels, and Reddit are optional
 — any unset source is skipped (`imageProvider: 'openverse'` needs no image key).
@@ -245,9 +247,13 @@ delete recent entries from `content/.topic-log.json`.
 failed to scrape (timeouts, 403s, JS-only pages). The pipeline skips gracefully;
 try again next tick.
 
-**Groq rate limit** — the free tier is generous. One post per hour stays well
-under it; if you're iterating locally, just wait a moment (the pipeline also
-fails over to `openai/gpt-oss-20b` on the same key).
+**Groq rate limit / 413 "request too large"** — the primary model's free tier
+counts input + requested output against an 8K tokens-per-minute budget at
+admission, so an oversized single request is rejected outright. The pipeline
+keeps requests under that budget and fails over to
+`meta-llama/llama-4-scout-17b-16e-instruct` (30K TPM, same key) when the
+primary is rate-limited or over budget; if you're iterating locally, just wait
+a moment.
 
 ---
 
