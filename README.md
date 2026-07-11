@@ -62,15 +62,15 @@ cp .env.example .env.local
 
 | Key | Where | Free tier |
 |---|---|---|
-| `GROQ_API_KEY` | https://console.groq.com/keys | generous free tier on `llama-3.3-70b-versatile` |
+| `GROQ_API_KEY` | https://console.groq.com/keys | generous free tier on `openai/gpt-oss-120b` |
 | `BRAVE_API_KEY` | https://api.search.brave.com/app/keys | 2,000 queries/month on the free plan |
 | `PEXELS_API_KEY` | https://www.pexels.com/api/new/ | Unlimited for dev use |
 | `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` | reddit.com → prefs → apps (create a "script" app) | Free |
 | `GITHUB_TOKEN` | github.com → Settings → Developer settings → Fine-grained PAT | Scope: **Contents: Read/Write** on the blog repo only |
 | `CRON_SECRET` | `openssl rand -hex 32` | — |
 
-The writer LLM defaults to **Groq** (`llama-3.3-70b-versatile`, with an
-automatic `llama-3.1-8b-instant` fallback on the same key). To switch to
+The writer LLM defaults to **Groq** (`openai/gpt-oss-120b`, with an
+automatic `openai/gpt-oss-20b` fallback on the same key). To switch to
 OpenRouter, change the `llm` block in `src/site.config.ts` and set the matching
 key (`OPENROUTER_API_KEY`). Brave, Pexels, and Reddit are optional
 — any unset source is skipped (`imageProvider: 'openverse'` needs no image key).
@@ -247,7 +247,7 @@ try again next tick.
 
 **Groq rate limit** — the free tier is generous. One post per hour stays well
 under it; if you're iterating locally, just wait a moment (the pipeline also
-fails over to `llama-3.1-8b-instant` on the same key).
+fails over to `openai/gpt-oss-20b` on the same key).
 
 ---
 
