@@ -98,10 +98,11 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <span>·</span>
           <span>{readingTimeMin} min read</span>
         </div>
-        <h1 className="marquee text-4xl sm:text-6xl font-black leading-[1.02] tracking-tight">
+        <h1 className="marquee text-4xl sm:text-6xl leading-[1.02]">
           {frontmatter.title}
         </h1>
-        <p className="mt-6 font-display text-xl sm:text-2xl font-normal leading-snug text-ink/70">
+        {/* Standfirst: italic editorial serif under the poster-caps title */}
+        <p className="mt-6 text-xl sm:text-2xl italic leading-snug text-ink/70">
           {frontmatter.description}
         </p>
       </header>

@@ -52,9 +52,9 @@ function Masthead() {
         <span>Now showing</span>
         <span className="ml-auto hidden text-muted sm:block">{today}</span>
       </div>
-      <h1 className="marquee mt-4 text-5xl font-black leading-[0.95] tracking-tight sm:text-7xl">
+      <h1 className="marquee mt-4 text-5xl leading-[0.95] sm:text-7xl">
         {brandLead ? `${brandLead} ` : ''}
-        <span className="marquee-gold text-accent">{brandLast}</span>
+        <span className="foil-gold">{brandLast}</span>
       </h1>
       <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink/70">
         {siteConfig.description}
@@ -99,7 +99,7 @@ function LeadStory({ post }: { post: Awaited<ReturnType<typeof listPosts>>[numbe
           {frontmatter.category}
         </Link>
         <Link href={`/blog/${slug}`} className="group">
-          <h2 className="font-display text-3xl sm:text-4xl font-black leading-[1.05] tracking-tight group-hover:text-accent transition-colors">
+          <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] group-hover:text-accent transition-colors">
             {frontmatter.title}
           </h2>
         </Link>

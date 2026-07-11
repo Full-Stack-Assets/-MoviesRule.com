@@ -7,10 +7,12 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Loaded via next/font in src/app/layout.tsx: Bebas Neue (condensed
+      // poster display), Source Serif 4 (editorial body), JetBrains Mono.
       fontFamily: {
-        display: ['var(--font-display)', 'serif'],
-        body: ['var(--font-body)', 'sans-serif'],
-        mono: ['var(--font-mono)', 'monospace'],
+        display: ['var(--font-display)', 'Impact', 'Arial Narrow', 'sans-serif'],
+        body: ['var(--font-body)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       // Cinematic palette: near-black "theater" background, warm ivory type,
       // crimson marquee accent, brass-gold secondary. The semantic token names

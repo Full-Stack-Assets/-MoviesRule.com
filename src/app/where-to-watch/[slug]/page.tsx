@@ -107,9 +107,9 @@ export default async function WhereToWatchPage({
       <div className="mb-4 text-xs uppercase tracking-[0.2em] text-muted">
         <Link href="/where-to-watch" className="hover:text-accent">Where to Watch</Link>
       </div>
-      <h1 className="font-display text-4xl sm:text-5xl font-black leading-[1.05] tracking-tight">
+      <h1 className="marquee text-4xl sm:text-5xl leading-[1.05]">
         Where to watch {film.title}
-        <span className="text-muted font-normal">{yr}</span>
+        <span className="text-muted">{yr}</span>
       </h1>
 
       <p className="mt-6 text-lg leading-relaxed text-ink/80">

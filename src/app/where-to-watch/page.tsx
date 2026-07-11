@@ -25,8 +25,8 @@ export default async function WhereToWatchHub() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-12 sm:py-20">
       <header className="mb-12">
-        <h1 className="font-display text-4xl sm:text-6xl font-black leading-[1.02] tracking-tight">
-          Where to <span className="text-accent">watch</span>
+        <h1 className="marquee text-4xl sm:text-6xl leading-[1.02]">
+          Where to <span className="foil-gold">watch</span>
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink/80">
           The films and shows everyone&rsquo;s talking about — and exactly where to stream, rent, or

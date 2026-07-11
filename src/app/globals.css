@@ -1,8 +1,6 @@
-/* Per the CSS spec, @import must precede all other rules — keep this web-font
-   import above the @tailwind directives (strict processors like Lightning CSS
-   reject it otherwise). */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
+/* Fonts are loaded via next/font in src/app/layout.tsx (Bebas Neue display,
+   Source Serif 4 body, JetBrains Mono labels) which sets --font-display /
+   --font-body / --font-mono on <html> — no render-blocking @import here. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,10 +10,6 @@
    brass-gold secondary. Mirrored in tailwind.config.ts (ink/paper/accent/
    gold/muted) — change both together. */
 :root {
-  --font-display: 'Fraunces', 'Times New Roman', serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-
   --screen: #0c0a0e;       /* the dark of the house */
   --ivory: #f2ead9;        /* projected-light type */
   --crimson: #e84550;      /* marquee neon / curtain red */
@@ -26,60 +20,106 @@
 html {
   background: var(--screen);
   color: var(--ivory);
-  font-family: var(--font-body);
+  font-family: var(--font-body, Georgia, serif);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   color-scheme: dark;
 }
 
-/* House lights: a faint crimson glow up top (the marquee), a whisper of
-   gold at the floor, and a vignette holding the edges dark. */
+/* House lights, turned up: velvet curtain folds descending from the marquee
+   (a repeating crimson wash), twin spotlight cones crossing the hero, a
+   whisper of brass at the floor, and a deeper vignette holding the edges
+   dark. All layered pure-CSS gradients — no images, nothing animated. */
 body {
   background-image:
-    radial-gradient(ellipse 80% 45% at 50% -8%, rgba(232, 69, 80, 0.13) 0%, transparent 60%),
-    radial-gradient(ellipse 65% 40% at 85% 108%, rgba(217, 164, 65, 0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.5) 100%);
+    /* curtain folds — soft vertical pleats fading out by mid-viewport */
+    repeating-linear-gradient(
+      90deg,
+      rgba(127, 29, 38, 0.14) 0px,
+      rgba(232, 69, 80, 0.05) 45px,
+      rgba(20, 4, 8, 0.16) 90px,
+      rgba(127, 29, 38, 0.14) 135px
+    ),
+    linear-gradient(180deg, rgba(12, 10, 14, 0) 0%, var(--screen) 34rem),
+    /* twin spotlight cones sweeping in from the top corners */
+    conic-gradient(from 152deg at 12% -6%, transparent 0deg, rgba(242, 234, 217, 0.06) 14deg, transparent 30deg),
+    conic-gradient(from 185deg at 88% -6%, transparent 0deg, rgba(217, 164, 65, 0.07) 14deg, transparent 30deg),
+    /* marquee glow + brass floor light */
+    radial-gradient(ellipse 85% 50% at 50% -8%, rgba(232, 69, 80, 0.2) 0%, transparent 62%),
+    radial-gradient(ellipse 65% 40% at 85% 108%, rgba(217, 164, 65, 0.1) 0%, transparent 60%),
+    /* vignette */
+    radial-gradient(ellipse 115% 85% at 50% 38%, transparent 48%, rgba(0, 0, 0, 0.62) 100%);
   min-height: 100vh;
 }
 
-/* Faint film grain over everything */
+/* Richer film grain over everything */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.5;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.65;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   mix-blend-mode: screen;
 }
 
+/* Gold-foil selection — like a ticket stub catching the lobby lights */
 ::selection {
-  background: var(--crimson);
-  color: #fff8ec;
+  background: var(--gold);
+  color: #17110a;
 }
 
-/* ── Display type ─────────────────────────────────────────────────── */
+/* Keyboard focus reads as a brass ring under the house lights */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ── Display type ─────────────────────────────────────────────────
+   Bebas Neue is a condensed all-caps poster face: it wants a touch of
+   positive tracking and normal weight (it ships a single 400 cut). */
 .font-display {
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display, Impact, 'Arial Narrow', sans-serif);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
-/* Marquee headline: display serif with a soft neon-crimson bloom, as if lit
+/* Marquee headline: poster caps with a soft neon-crimson bloom, as if lit
    from behind the letters. Use on hero/section display text. */
 .marquee {
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display, Impact, 'Arial Narrow', sans-serif);
+  font-weight: 400;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
   text-shadow:
-    0 0 24px rgba(232, 69, 80, 0.28),
-    0 0 90px rgba(232, 69, 80, 0.14);
+    0 0 24px rgba(232, 69, 80, 0.32),
+    0 0 90px rgba(232, 69, 80, 0.16);
 }
 .marquee-gold {
   text-shadow:
     0 0 22px rgba(217, 164, 65, 0.32),
     0 0 80px rgba(217, 164, 65, 0.14);
+}
+
+/* Gold-foil headline: brushed-metal gradient clipped to the glyphs, with a
+   drop-shadow bloom (text-shadow can't be used with background-clip: text). */
+.foil-gold {
+  background-image: linear-gradient(
+    100deg,
+    #8a6423 0%,
+    #d9a441 28%,
+    #f7e08b 46%,
+    #fff3c4 50%,
+    #f7e08b 54%,
+    #d9a441 72%,
+    #9a7128 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px rgba(217, 164, 65, 0.35));
 }
 
 /* ── Poster cards ─────────────────────────────────────────────────
@@ -92,11 +132,53 @@ body::before {
 }
 .card-poster:hover {
   transform: translateY(-4px);
-  border-color: rgba(217, 164, 65, 0.4);
+  border-color: rgba(217, 164, 65, 0.45);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.5),
     0 24px 48px -12px rgba(0, 0, 0, 0.8),
-    0 0 40px -8px rgba(232, 69, 80, 0.18);
+    0 0 44px -8px rgba(232, 69, 80, 0.22);
+}
+
+/* Spotlight sheen: a diagonal shaft of projector light that sweeps across
+   the poster on hover. Pure CSS, disabled for reduced-motion users. */
+.card-poster {
+  position: relative;
+  overflow: hidden;
+}
+.card-poster::after {
+  content: '';
+  position: absolute;
+  inset: -60% auto auto -75%;
+  width: 55%;
+  height: 260%;
+  transform: rotate(22deg) translateX(0);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(242, 234, 217, 0.05) 35%,
+    rgba(247, 224, 139, 0.12) 50%,
+    rgba(242, 234, 217, 0.05) 65%,
+    transparent 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.35s ease;
+}
+.card-poster:hover::after {
+  opacity: 1;
+  transform: rotate(22deg) translateX(320%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-poster,
+  .card-poster::after {
+    transition: none;
+  }
+  .card-poster:hover {
+    transform: none;
+  }
+  .card-poster:hover::after {
+    opacity: 0;
+  }
 }
 
 /* ── Prose overrides for MDX post bodies ─────────────────────────── */
@@ -109,11 +191,11 @@ body::before {
   margin: 1.25em 0;
 }
 .prose-editorial h2 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 2rem;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display, Impact, 'Arial Narrow', sans-serif);
+  font-weight: 400;
+  font-size: 2.1rem;
+  line-height: 1.1;
+  letter-spacing: 0.035em;
   margin-top: 2.75em;
   margin-bottom: 0.6em;
   color: var(--ivory);
@@ -128,9 +210,10 @@ body::before {
   background: linear-gradient(90deg, var(--gold), transparent);
 }
 .prose-editorial h3 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.4rem;
+  font-family: var(--font-display, Impact, 'Arial Narrow', sans-serif);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  font-size: 1.5rem;
   margin-top: 2em;
   color: var(--ivory);
 }
@@ -150,7 +233,7 @@ body::before {
   color: var(--ivory);
 }
 .prose-editorial code {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 0.9em;
   background: rgba(242, 234, 217, 0.08);
   padding: 0.15em 0.4em;
