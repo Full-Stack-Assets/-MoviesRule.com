@@ -98,7 +98,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <span>·</span>
           <span>{readingTimeMin} min read</span>
         </div>
-        <h1 className="font-display text-4xl sm:text-6xl font-black leading-[1.02] tracking-tight">
+        <h1 className="marquee text-4xl sm:text-6xl font-black leading-[1.02] tracking-tight">
           {frontmatter.title}
         </h1>
         <p className="mt-6 font-display text-xl sm:text-2xl font-normal leading-snug text-ink/70">
@@ -115,7 +115,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             alt={frontmatter.hero.alt}
             fetchPriority="high"
             decoding="async"
-            className="aspect-video w-full object-cover"
+            className="aspect-video w-full rounded-lg border border-ink/10 object-cover shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]"
           />
           {frontmatter.hero.credit && (
             <figcaption className="mt-2 px-6 sm:px-0 text-xs text-muted">
@@ -149,8 +149,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
       {/* Sources */}
       {frontmatter.sources?.length > 0 && (
-        <section className="mt-16 border-t-2 border-ink pt-8">
-          <div className="mb-4 font-display text-sm font-bold uppercase tracking-[0.3em] text-muted">
+        <section className="mt-16 border-t border-gold/30 pt-8">
+          <div className="mb-4 font-display text-sm font-bold uppercase tracking-[0.3em] text-gold">
             Sources
           </div>
           <ol className="space-y-2 text-sm">
@@ -179,8 +179,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
       {/* Keep reading — internal links to related posts */}
       {related.length > 0 && (
-        <section className="mt-16 border-t-2 border-ink pt-8">
-          <div className="mb-6 font-display text-sm font-bold uppercase tracking-[0.3em] text-muted">
+        <section className="mt-16 border-t border-gold/30 pt-8">
+          <div className="mb-6 font-display text-sm font-bold uppercase tracking-[0.3em] text-gold">
             Keep reading
           </div>
           <ul className="space-y-6">

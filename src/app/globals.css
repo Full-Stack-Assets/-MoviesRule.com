@@ -7,56 +7,103 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Cinematic theme tokens ─────────────────────────────────────────
+   Near-black theater room, warm ivory type, crimson marquee accent and
+   brass-gold secondary. Mirrored in tailwind.config.ts (ink/paper/accent/
+   gold/muted) — change both together. */
 :root {
   --font-display: 'Fraunces', 'Times New Roman', serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --screen: #0c0a0e;       /* the dark of the house */
+  --ivory: #f2ead9;        /* projected-light type */
+  --crimson: #e84550;      /* marquee neon / curtain red */
+  --crimson-deep: #7f1d26; /* velvet shadow red */
+  --gold: #d9a441;         /* brass fixtures / award gold */
 }
 
 html {
-  background: #f6f3ec;
-  color: #0a0a0a;
+  background: var(--screen);
+  color: var(--ivory);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  color-scheme: dark;
 }
 
+/* House lights: a faint crimson glow up top (the marquee), a whisper of
+   gold at the floor, and a vignette holding the edges dark. */
 body {
   background-image:
-    radial-gradient(at 0% 0%, rgba(255, 91, 31, 0.04) 0%, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(10, 10, 10, 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 45% at 50% -8%, rgba(232, 69, 80, 0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 40% at 85% 108%, rgba(217, 164, 65, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.5) 100%);
   min-height: 100vh;
 }
 
-/* Subtle paper grain */
+/* Faint film grain over everything */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.35;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: multiply;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
 }
 
 ::selection {
-  background: #ff5b1f;
-  color: #f6f3ec;
+  background: var(--crimson);
+  color: #fff8ec;
 }
 
-/* Display serif utility */
+/* ── Display type ─────────────────────────────────────────────────── */
 .font-display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
   letter-spacing: -0.02em;
 }
 
-/* Prose overrides for MDX body */
+/* Marquee headline: display serif with a soft neon-crimson bloom, as if lit
+   from behind the letters. Use on hero/section display text. */
+.marquee {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+  text-shadow:
+    0 0 24px rgba(232, 69, 80, 0.28),
+    0 0 90px rgba(232, 69, 80, 0.14);
+}
+.marquee-gold {
+  text-shadow:
+    0 0 22px rgba(217, 164, 65, 0.32),
+    0 0 80px rgba(217, 164, 65, 0.14);
+}
+
+/* ── Poster cards ─────────────────────────────────────────────────
+   One-sheet feel: hairline brass-tinted border, deep shadow, lift on hover. */
+.card-poster {
+  border: 1px solid rgba(242, 234, 217, 0.1);
+  background: linear-gradient(180deg, rgba(242, 234, 217, 0.045) 0%, rgba(242, 234, 217, 0.015) 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px -12px rgba(0, 0, 0, 0.7);
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.card-poster:hover {
+  transform: translateY(-4px);
+  border-color: rgba(217, 164, 65, 0.4);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    0 24px 48px -12px rgba(0, 0, 0, 0.8),
+    0 0 40px -8px rgba(232, 69, 80, 0.18);
+}
+
+/* ── Prose overrides for MDX post bodies ─────────────────────────── */
 .prose-editorial {
   font-size: 1.125rem;
-  line-height: 1.7;
-  color: #1a1a1a;
+  line-height: 1.75;
+  color: rgba(242, 234, 217, 0.88);
 }
 .prose-editorial p {
   margin: 1.25em 0;
@@ -69,50 +116,61 @@ body::before {
   letter-spacing: -0.02em;
   margin-top: 2.75em;
   margin-bottom: 0.6em;
-  color: #0a0a0a;
+  color: var(--ivory);
 }
+/* Act marker: a short brass rule leading each section heading */
 .prose-editorial h2::before {
-  content: '§';
-  color: #ff5b1f;
-  margin-right: 0.4em;
-  font-weight: 900;
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 2px;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(90deg, var(--gold), transparent);
 }
 .prose-editorial h3 {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.4rem;
   margin-top: 2em;
+  color: var(--ivory);
 }
 .prose-editorial a {
-  color: #ff5b1f;
+  color: var(--gold);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
+  text-decoration-color: rgba(217, 164, 65, 0.5);
 }
 .prose-editorial a:hover {
+  color: var(--crimson);
+  text-decoration-color: currentColor;
   text-decoration-thickness: 2px;
+}
+.prose-editorial strong {
+  color: var(--ivory);
 }
 .prose-editorial code {
   font-family: var(--font-mono);
   font-size: 0.9em;
-  background: rgba(10, 10, 10, 0.06);
+  background: rgba(242, 234, 217, 0.08);
   padding: 0.15em 0.4em;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 .prose-editorial pre {
-  background: #0a0a0a;
-  color: #f6f3ec;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(242, 234, 217, 0.1);
+  color: var(--ivory);
   padding: 1.25rem;
-  border-radius: 2px;
+  border-radius: 4px;
   overflow-x: auto;
   font-size: 0.9rem;
   line-height: 1.5;
 }
 .prose-editorial blockquote {
-  border-left: 3px solid #ff5b1f;
+  border-left: 3px solid var(--crimson);
   padding-left: 1.25rem;
   font-style: italic;
-  color: #3a3a3a;
+  color: rgba(242, 234, 217, 0.72);
   margin: 1.75em 0;
 }
 .prose-editorial ul, .prose-editorial ol {
@@ -123,5 +181,5 @@ body::before {
 .prose-editorial ul li::before {
   content: '';
   position: absolute; left: 0; top: 0.7em;
-  width: 0.5rem; height: 1px; background: #ff5b1f;
+  width: 0.5rem; height: 1px; background: var(--gold);
 }

@@ -33,9 +33,9 @@ export function WhereToWatch({ ctx }: { ctx: WatchContext }) {
   return (
     <section
       aria-label="Where to watch"
-      className="mt-16 border-2 border-ink bg-ink/[0.03] p-6 sm:p-8"
+      className="card-poster mt-16 rounded-lg p-6 sm:p-8"
     >
-      <div className="mb-4 font-display text-sm font-bold uppercase tracking-[0.3em] text-muted">
+      <div className="mb-4 font-display text-sm font-bold uppercase tracking-[0.3em] text-gold">
         {heading}
       </div>
 
@@ -51,7 +51,7 @@ export function WhereToWatch({ ctx }: { ctx: WatchContext }) {
                   href={providerLink(p, title ?? p)}
                   target="_blank"
                   rel={NAV_REL}
-                  className="inline-block border border-ink/30 px-3 py-1.5 text-sm font-medium hover:border-accent hover:text-accent transition-colors"
+                  className="inline-block rounded-full border border-ink/25 px-3 py-1.5 text-sm font-medium hover:border-gold hover:text-gold transition-colors"
                 >
                   {p}
                 </a>
