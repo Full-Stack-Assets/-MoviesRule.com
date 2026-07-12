@@ -14,7 +14,7 @@ streaming niche site. The engine itself is generic: everything niche-specific
 lives in **`src/site.config.ts`**. A few internal identifiers still carry the
 upstream template name `trendblog` — see [Template defaults](#template-defaults).
 
-**Cost at steady state: $0** — runs entirely on free tiers (Gemini, Brave,
+**Cost at steady state: $0** — runs entirely on free tiers (Groq, Brave,
 Pexels, GitHub Actions, Vercel/Cloudflare).
 
 ## Tech stack
@@ -23,7 +23,7 @@ Pexels, GitHub Actions, Vercel/Cloudflare).
 - **TypeScript** throughout, **Tailwind CSS** for styling
 - **TinaCMS** — optional in-browser editor (`/admin`)
 - **next-mdx-remote** — renders MDX post bodies with custom components
-- **Gemini** (default LLM, OpenAI-compatible endpoint) — the writer
+- **Groq** (default LLM, OpenAI-compatible endpoint) — the writer
 - **Octokit** (`@octokit/rest`) — commits posts via the GitHub Contents API
 - **Zod** — validates the LLM's JSON output against a self-healing schema
 - **tsx** — runs the pipeline scripts directly from TypeScript
@@ -165,7 +165,7 @@ sources: [{ title, url }]
 Branding (`name`, `tagline`, `description`, `url`, `footerNote`), `audience`
 (goes into the writer's prompt), `categories` + `navCategories`, niche `sources`
 (`subreddits`, `rssFeeds`, `braveQueries`, `trendsKeywords`), `adsenseClient`,
-the `llm` block (endpoint/model/`apiKeyEnv` — defaults to Gemini), and
+the `llm` block (endpoint/model/`apiKeyEnv` — defaults to Groq), and
 `imageProvider`. See `CREATE-A-SITE.md` for the full spin-up walkthrough.
 
 Things wired to read from this config (don't hard-code these): `reddit.ts`,
@@ -179,7 +179,7 @@ site chrome, feed, sitemap, robots, and structured-data read `name`/`url`/
 
 See `.env.example` for the full annotated list. Highlights:
 - **LLM key** — name must match `llm.apiKeyEnv` in `site.config.ts`
-  (`GEMINI_API_KEY` by default).
+  (`GROQ_API_KEY` by default).
 - `BRAVE_API_KEY`, `PEXELS_API_KEY`, `REDDIT_CLIENT_ID/SECRET` — optional;
   any unset source/provider is skipped.
 - `GITHUB_TOKEN` / `GITHUB_OWNER` / `GITHUB_REPO` / `GITHUB_BRANCH` — for the

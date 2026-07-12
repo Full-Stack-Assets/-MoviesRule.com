@@ -7,7 +7,7 @@ structured MDX post, and commits it to GitHub. The Next.js site auto-deploys.
 **Live:** [moviesrule.com](https://moviesrule.com) — film news, reviews, and
 what's worth streaming.
 
-**Stack:** Next.js 15 · TinaCMS · Google Gemini (free tier) · Brave Search ·
+**Stack:** Next.js 15 · TinaCMS · Groq (free tier) · Brave Search ·
 Pexels · GitHub Contents API · Vercel.
 
 **Monthly cost at steady state:** $0.
@@ -62,16 +62,19 @@ cp .env.example .env.local
 
 | Key | Where | Free tier |
 |---|---|---|
-| `GEMINI_API_KEY` | https://aistudio.google.com/apikey | ~1,500 requests/day on `gemini-flash-latest` |
+| `GROQ_API_KEY` | https://console.groq.com/keys | generous free tier on `openai/gpt-oss-120b` |
 | `BRAVE_API_KEY` | https://api.search.brave.com/app/keys | 2,000 queries/month on the free plan |
 | `PEXELS_API_KEY` | https://www.pexels.com/api/new/ | Unlimited for dev use |
 | `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` | reddit.com → prefs → apps (create a "script" app) | Free |
 | `GITHUB_TOKEN` | github.com → Settings → Developer settings → Fine-grained PAT | Scope: **Contents: Read/Write** on the blog repo only |
 | `CRON_SECRET` | `openssl rand -hex 32` | — |
 
-The writer LLM defaults to **Google Gemini**. To switch to Groq or OpenRouter,
-change the `llm` block in `src/site.config.ts` and set the matching key
-(`GROQ_API_KEY` / `OPENROUTER_API_KEY`). Brave, Pexels, and Reddit are optional
+The writer LLM defaults to **Groq** (`openai/gpt-oss-120b`, with an
+automatic `meta-llama/llama-4-scout-17b-16e-instruct` fallback on the same
+key — the primary's free tier caps at 8K tokens/minute; Scout's 30K TPM cap
+gives failover real headroom). To switch to
+OpenRouter, change the `llm` block in `src/site.config.ts` and set the matching
+key (`OPENROUTER_API_KEY`). Brave, Pexels, and Reddit are optional
 — any unset source is skipped (`imageProvider: 'openverse'` needs no image key).
 
 Fill the keys into `.env.local` along with `GITHUB_OWNER` / `GITHUB_REPO` /
@@ -129,7 +132,7 @@ the top of every hour (`cron: '0 * * * *'`), executes the pipeline with
 No serverless CPU limits, free logs, and the push triggers your host to
 redeploy. This is the scheduler — your host below just serves the site.
 
-Add the pipeline secrets (`GEMINI_API_KEY`, `BRAVE_API_KEY`, `PEXELS_API_KEY`,
+Add the pipeline secrets (`GROQ_API_KEY`, `BRAVE_API_KEY`, `PEXELS_API_KEY`,
 `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`) under **Settings → Secrets and
 variables → Actions**. The workflow has `contents: write` and a `concurrency`
 group so a slow run never overlaps the next tick. Use the **Run workflow** button
@@ -244,8 +247,13 @@ delete recent entries from `content/.topic-log.json`.
 failed to scrape (timeouts, 403s, JS-only pages). The pipeline skips gracefully;
 try again next tick.
 
-**Gemini rate limit** — the free tier is generous (~1,500 req/day). One post per
-hour stays well under it; if you're iterating locally, just wait a moment.
+**Groq rate limit / 413 "request too large"** — the primary model's free tier
+counts input + requested output against an 8K tokens-per-minute budget at
+admission, so an oversized single request is rejected outright. The pipeline
+keeps requests under that budget and fails over to
+`meta-llama/llama-4-scout-17b-16e-instruct` (30K TPM, same key) when the
+primary is rate-limited or over budget; if you're iterating locally, just wait
+a moment.
 
 ---
 

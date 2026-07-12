@@ -28,7 +28,6 @@ jobs:
       - run: npm ci
       - name: Generate 30 film posts
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: npx tsx scripts/seed-film.ts --limit=30

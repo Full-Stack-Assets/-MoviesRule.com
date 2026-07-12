@@ -76,22 +76,22 @@ export const siteConfig = {
   // ── Ads ───────────────────────────────────────────────────────
   adsenseClient: 'ca-pub-4655488107179825',
 
-  // ── Engine: writer LLM (Google Gemini, OpenAI-compatible) ─────
+  // ── Engine: writer LLM (Groq, OpenAI-compatible) ──────────────
   llm: {
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-    model: 'gemini-flash-latest',
-    // Tried when the primary model returns a transient error (e.g. 503 overload).
-    // Pin a stable GA model so a brief spike on the '-latest' alias doesn't fail the run.
-    fallbackModel: 'gemini-2.0-flash',
-    apiKeyEnv: 'GEMINI_API_KEY',
+    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    model: 'openai/gpt-oss-120b',
+    apiKeyEnv: 'GROQ_API_KEY',
   },
 
-  // Automatic failover: when Gemini returns transient 5xx / "overloaded" (503)
-  // errors, generate.ts retries the request against this OpenAI-compatible
-  // backup. Skipped when GROQ_API_KEY isn't set. Groq's free tier is fast.
+  // Automatic failover: generate.ts retries against this model (same API key)
+  // only on transient availability errors from the primary — 413 "request too
+  // large", 429, 5xx, "overloaded"/"unavailable". The primary's free tier is
+  // capped at 8K tokens/minute (input + requested output, counted at
+  // admission); Scout's 30K TPM cap gives the failover real headroom when a
+  // research-heavy prompt blows the primary's budget.
   llmFallback: {
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-    model: 'llama-3.3-70b-versatile',
+    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
     apiKeyEnv: 'GROQ_API_KEY',
   },
 

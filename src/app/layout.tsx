@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Bebas_Neue, Source_Serif_4, JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
 import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/next';
@@ -11,6 +12,14 @@ import { ADSENSE_CLIENT, ADSENSE_SLOT_FOOTER } from '@/lib/ads';
 import { AFFILIATE_ENABLED } from '@/lib/affiliate';
 import { siteConfig } from '@/site.config';
 import './globals.css';
+
+/* Marquee pairing: a condensed cinema-poster display face for headlines, a
+   refined editorial serif for body copy, and a mono for tickets/labels.
+   Loaded via next/font (self-hosted at build, zero render-blocking requests)
+   and exposed as CSS variables consumed by tailwind.config.ts + globals.css. */
+const fontDisplay = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--font-display', display: 'swap' });
+const fontBody = Source_Serif_4({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
+const fontMono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono', display: 'swap' });
 
 /** Short categories (AI, DIY) read better uppercased; longer ones title-cased. */
 function navLabel(c: string): string {
@@ -47,7 +56,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${fontDisplay.variable} ${fontBody.variable} ${fontMono.variable}`}>
       <body className="relative">
         {ADSENSE_CLIENT && (
           <Script
@@ -76,17 +85,19 @@ function Header() {
   const brandLast = words.pop();
   const brandLead = words.join(' ');
   return (
-    <header className="relative z-20 border-b border-ink/20">
-      <div className="mx-auto flex max-w-6xl items-end justify-between px-6 py-6">
+    <header className="sticky top-0 z-30 border-b border-ink/10 bg-paper/80 backdrop-blur-md supports-[backdrop-filter]:bg-paper/70">
+      {/* Marquee trim line */}
+      <div className="h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent" />
+      <div className="mx-auto flex max-w-6xl items-end justify-between px-6 py-4">
         <Link href="/" className="group">
-          <div className="font-display text-3xl font-black tracking-tight leading-none">
-            {brandLead ? `${brandLead} ` : ''}<span className="text-accent">{brandLast}</span>
+          <div className="marquee text-3xl leading-none">
+            {brandLead ? `${brandLead} ` : ''}<span className="foil-gold">{brandLast}</span>
           </div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted">
+          <div className="mt-1 text-[10px] uppercase tracking-[0.25em] text-gold">
             {siteConfig.tagline}
           </div>
         </Link>
-        <nav className="hidden sm:flex items-center gap-6 text-sm font-medium">
+        <nav className="hidden sm:flex items-center gap-6 text-sm font-medium text-ink/80">
           <Link href="/" className="hover:text-accent transition-colors">Latest</Link>
           {siteConfig.navCategories.map((c) => (
             <Link key={c} href={`/categories/${c}`} className="hover:text-accent transition-colors">{navLabel(c)}</Link>
@@ -105,7 +116,8 @@ function Header() {
 
 function Footer() {
   return (
-    <footer className="relative z-10 mt-32 border-t border-ink/20">
+    <footer className="relative z-10 mt-32 border-t border-ink/10 bg-black/30">
+      <div className="h-0.5 bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
       <div className="mx-auto max-w-6xl px-6 py-10 text-sm text-muted">
         <AdSlot slot={ADSENSE_SLOT_FOOTER} format="auto" className="mb-8 block" />
         {newsletterConfigured() && (

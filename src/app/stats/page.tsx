@@ -45,12 +45,13 @@ export default async function StatsPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       {/* Header */}
-      <div className="mb-12 border-b-2 border-ink pb-6">
-        <div className="text-xs uppercase tracking-[0.3em] text-muted">Meta</div>
-        <h1 className="mt-2 font-display text-5xl font-black">Stats</h1>
+      <div className="mb-12">
+        <div className="text-xs uppercase tracking-[0.3em] text-gold">Meta</div>
+        <h1 className="marquee mt-2 text-5xl">Stats</h1>
         <p className="mt-2 text-muted">
           Pipeline telemetry and content breakdown.
         </p>
+        <div className="mt-6 h-0.5 bg-gradient-to-r from-accent via-gold/40 to-transparent" />
       </div>
 
       {/* KPI cards */}
@@ -173,7 +174,7 @@ export default async function StatsPage() {
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="border border-ink/20 p-5">
-      <div className="font-display text-3xl font-black text-accent">{value}</div>
+      <div className="font-display text-3xl foil-gold">{value}</div>
       <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted">
         {label}
       </div>

@@ -6,7 +6,7 @@
  * on-niche film content so the site isn't dependent on what happens to be
  * trending. It drives the SAME generate → image → serialize path as the
  * pipeline, but synthesizes a research-free bundle from a curated topic, so it
- * needs only the LLM key (GEMINI_API_KEY, with the Groq fallback) — no Brave.
+ * needs only the LLM key (GROQ_API_KEY; a smaller Groq model is the fallback) — no Brave.
  *
  * Topics are evergreen and general on purpose (history/craft/genres of film and
  * media), which keeps the LLM on safe, factual ground without external sources.
