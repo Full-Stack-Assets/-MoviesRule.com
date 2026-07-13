@@ -3,28 +3,54 @@ import type { ResearchBundle, GeneratedPost } from './types';
 import { siteConfig } from '@/site.config';
 import { mdxCompileError } from './mdx-validate';
 
-type LlmProvider = { endpoint: string; model: string; apiKeyEnv: string };
+type LlmProvider = { endpoint: string; model: string; apiKeyEnv: string; maxTokens?: number };
 
-// Primary writer model, plus an optional backup provider used when the primary
-// keeps returning transient availability errors (5xx / rate limit). The backup
-// is configured as `llmFallback` in site.config.ts; skipped when absent or when
-// its API key isn't set.
+// Primary writer model plus an ordered chain of backup providers, walked
+// front-to-back as providers error out. Configured as `llmFallbacks` in
+// site.config.ts (the older single `llmFallback` shape still works); entries
+// whose API key isn't set are skipped.
 const PRIMARY_LLM: LlmProvider = siteConfig.llm;
-const FALLBACK_LLM: LlmProvider | undefined = (siteConfig as { llmFallback?: LlmProvider }).llmFallback;
+const FALLBACK_LLMS: LlmProvider[] = (() => {
+  const cfg = siteConfig as { llmFallbacks?: readonly LlmProvider[]; llmFallback?: LlmProvider };
+  return [...(cfg.llmFallbacks ?? (cfg.llmFallback ? [cfg.llmFallback] : []))];
+})();
 
-/** A transient provider error worth failing over to the backup LLM for.
+/** A transient provider error worth failing over to the next LLM for.
  *  Includes 413 / "request too large": Groq admits a request against the
  *  per-minute token budget up front, so an over-budget request on the primary
- *  (8K TPM free tier) is rejected outright — but fits the fallback's 30K TPM. */
-function isAvailabilityError(msg: string): boolean {
+ *  (8K TPM free tier) is rejected outright — but fits the fallbacks' 30K TPM. */
+export function isAvailabilityError(msg: string): boolean {
   return (
     /API error (?:413|429|5\d\d)\b/.test(msg) ||
     /overloaded|unavailable|high demand|too large/i.test(msg)
   );
 }
 
-/** How many times to ask the model before giving up on a structurally valid post. */
-const MAX_GENERATION_ATTEMPTS = 5;
+/** A non-transient client error that repeating the same request against the
+ *  same model cannot fix — Groq's json_object validation rejecting the
+ *  generation, or a model that no longer exists. Worth moving down the chain
+ *  immediately instead of burning every remaining attempt on it. */
+export function isHardProviderError(msg: string): boolean {
+  return (
+    /API error 40[04]\b/.test(msg) &&
+    /json_validate_failed|failed to generate json|model_decommissioned|model_not_found|does not exist/i.test(
+      msg
+    )
+  );
+}
+
+/** A daily-quota (tokens-per-day) rate limit. Groq's "try again in 1h18m"
+ *  cannot succeed within this run, so once the whole chain has hit TPD there
+ *  is nothing left to retry. Per-minute limits, by contrast, do recover
+ *  between backoff sleeps and don't match here. */
+export function isDailyQuotaError(msg: string): boolean {
+  return /API error 429\b/.test(msg) && /\(TPD\)|per day/i.test(msg);
+}
+
+/** How many times to ask a model before giving up on a structurally valid
+ *  post. Each hop down the failover chain also consumes an attempt, so this
+ *  leaves several real tries even after walking a chain of three fallbacks. */
+const MAX_GENERATION_ATTEMPTS = 7;
 
 /** Pause helper for backing off between retries. */
 function sleep(ms: number): Promise<void> {
@@ -133,6 +159,7 @@ BODY STRUCTURE (mandatory, in this order):
    Exactly 3 questions, each a real question a reader would ask.
 
 HARD RULES:
+- The ONLY JSX components allowed in the body are <Callout>, <ProsCons>, <Pros>, <Cons>, <FAQ>, and <Question> (plus plain <li> items). Never invent other tags — e.g. FAQ answers are plain text inside <Question>, NOT wrapped in an <Answer> tag.
 - Write the SEO meta description as 1-2 sentences, at most 150 characters. Do not exceed 150 characters.
 - Never invent quotes or attribute statements to people.
 - Never invent specific numbers. If you cite a number, it must appear in the research.
@@ -159,12 +186,17 @@ export async function generate(
 ): Promise<GeneratedPost> {
   const primaryKey = process.env[PRIMARY_LLM.apiKeyEnv];
   if (!primaryKey) throw new Error(`${PRIMARY_LLM.apiKeyEnv} not set`);
-  const fallbackKey = FALLBACK_LLM ? (process.env[FALLBACK_LLM.apiKeyEnv] ?? '').trim() : '';
 
-  // Start on the primary provider; fail over to the backup on transient errors.
-  let provider = PRIMARY_LLM;
-  let providerKey = primaryKey;
-  let failedOver = false;
+  // The failover chain: primary first, then every configured fallback whose
+  // key is present. Provider errors advance `chainIdx`; it never moves back.
+  const chain: Array<{ provider: LlmProvider; key: string }> = [
+    { provider: PRIMARY_LLM, key: primaryKey },
+    ...FALLBACK_LLMS.flatMap((p) => {
+      const key = (process.env[p.apiKeyEnv] ?? '').trim();
+      return key ? [{ provider: p, key }] : [];
+    }),
+  ];
+  let chainIdx = 0;
 
   const baseUserPrompt = buildUserPrompt(bundle, opts.targetWords);
   const schema = opts.minBodyChars
@@ -182,20 +214,29 @@ export async function generate(
         ? baseUserPrompt
         : `${baseUserPrompt}\n\nYour previous response was rejected: ${lastError}\nReturn a corrected JSON object that satisfies every constraint exactly.`;
 
+    const { provider, key: providerKey } = chain[chainIdx];
+
     let content: string;
     try {
       content = await callLlm(provider, providerKey, SYSTEM_PROMPT, userPrompt);
     } catch (err) {
-      // Rate limit / 5xx / network blip — worth another attempt.
       lastError = err instanceof Error ? err.message : String(err);
-      // On a transient availability error, fail over to the backup provider
-      // (once) and retry immediately against the fresh endpoint.
-      if (!failedOver && FALLBACK_LLM && fallbackKey && isAvailabilityError(lastError)) {
-        failedOver = true;
-        provider = FALLBACK_LLM;
-        providerKey = fallbackKey;
-        console.warn(`generate: primary LLM (${PRIMARY_LLM.model}) unavailable — failing over to ${FALLBACK_LLM.model}`);
+      // Availability blips (rate limit / 5xx / over-budget) and hard client
+      // errors (json_validate_failed, decommissioned model) both advance to
+      // the next provider in the chain — the former because it's saturated,
+      // the latter because replaying the same request at it cannot succeed.
+      if (chainIdx < chain.length - 1 && (isAvailabilityError(lastError) || isHardProviderError(lastError))) {
+        chainIdx += 1;
+        console.warn(
+          `generate: ${provider.model} errored (${lastError.slice(0, 120)}) — failing over to ${chain[chainIdx].provider.model}`
+        );
         continue;
+      }
+      // End of the chain on a daily-quota limit: no amount of in-run retrying
+      // gets tokens back before tomorrow, so fail fast instead of sleeping
+      // through the remaining attempts.
+      if (chainIdx === chain.length - 1 && isDailyQuotaError(lastError)) {
+        break;
       }
       if (attempt < MAX_GENERATION_ATTEMPTS) {
         await sleep(Math.min(30_000, 1000 * 2 ** attempt));
@@ -251,10 +292,12 @@ export async function callLlm(
       model: provider.model,
       temperature: 0.5,
       // Groq counts input + requested output against the free-tier TPM budget
-      // at admission (8K/min on the primary model). 3584 keeps prompt + output
-      // inside a single-minute budget; a bigger ask gets the whole request
-      // rejected as 413 "request too large" before the model ever runs.
-      max_tokens: 3584,
+      // at admission (8K/min on the primary model). The 3584 default keeps
+      // prompt + output inside a single-minute budget; a bigger ask gets the
+      // whole request rejected as 413 "request too large" before the model
+      // ever runs. Providers with more TPM headroom raise it via `maxTokens`
+      // so long completions aren't truncated mid-JSON.
+      max_tokens: provider.maxTokens ?? 3584,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },
