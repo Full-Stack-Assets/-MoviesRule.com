@@ -1,10 +1,14 @@
 #!/bin/bash
+# Fail the script the moment any step fails — without this, a broken
+# `next build` still fell through to the success message and exit code 0,
+# so CI's build gate stayed green while production deploys were failing.
+set -eo pipefail
 
 # Build script that handles TinaCMS configuration gracefully
 # If TinaCMS credentials are not provided, we skip the TinaCMS cloud build
 
 # Check if TinaCMS credentials are set
-if [ -z "$NEXT_PUBLIC_TINA_CLIENT_ID" ] || [ -z "$TINA_TOKEN" ]; then
+if [ -z "${NEXT_PUBLIC_TINA_CLIENT_ID:-}" ] || [ -z "${TINA_TOKEN:-}" ]; then
   echo "⚠️  TinaCMS credentials not found. Skipping TinaCMS cloud build..."
   echo "ℹ️  TinaCMS will run in self-hosted mode (local filesystem editing)"
 else

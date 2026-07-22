@@ -5,6 +5,8 @@
 // `import()` routes through Node's ESM resolver instead, which handles those
 // maps correctly, and works equally well inside the Next build. Cache the
 // resolved module so repeated validations don't re-import.
+import { mdxComponents } from '@/components/mdx';
+
 type SerializeFn = (source: string) => Promise<unknown>;
 let serializePromise: Promise<SerializeFn> | undefined;
 function getSerialize(): Promise<SerializeFn> {
@@ -26,12 +28,22 @@ function getSerialize(): Promise<SerializeFn> {
  * Compiling here, at generation time, lets the retry loop catch it and feed the
  * compiler's own error back to the model, so a body that won't render never
  * reaches commit. `serialize` only compiles — it does not render — so no
- * component map is needed; an unknown component like `<ProsCons>` compiles fine,
- * only genuinely malformed MDX throws.
+ * component map is consulted and an *unknown* component like `<Answer>`
+ * compiles fine, then throws "Expected component `Answer` to be defined" at
+ * prerender. That exact failure shipped once and froze deploys, so on top of
+ * compiling, reject any capitalized JSX tag that isn't in the site's
+ * `mdxComponents` map.
  *
- * @returns a trimmed one-line compiler error, or `null` when the body compiles.
+ * @returns a trimmed one-line error, or `null` when the body will render.
  */
 export async function mdxCompileError(body: string): Promise<string | null> {
+  const unknown = unknownComponents(body);
+  if (unknown.length) {
+    const allowed = Object.keys(mdxComponents)
+      .map((n) => `<${n}>`)
+      .join(', ');
+    return `unknown component(s) ${unknown.map((n) => `<${n}>`).join(', ')} — the only available components are ${allowed}`;
+  }
   try {
     const serialize = await getSerialize();
     await serialize(body);
@@ -55,4 +67,13 @@ export async function mdxCompileError(body: string): Promise<string | null> {
       );
     return reason ?? msg.split('\n')[0] ?? 'MDX failed to compile';
   }
+}
+
+/** Capitalized JSX tag names used in the body that aren't registered in
+ *  `mdxComponents`. Lowercase tags (`<li>`, `<details>`, …) are plain HTML and
+ *  render without a component map, so only capitalized names can 404. */
+function unknownComponents(body: string): string[] {
+  const names = new Set<string>();
+  for (const m of body.matchAll(/<\/?([A-Z][A-Za-z0-9]*)/g)) names.add(m[1]);
+  return [...names].filter((n) => !(n in mdxComponents));
 }

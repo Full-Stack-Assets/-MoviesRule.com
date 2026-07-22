@@ -47,4 +47,19 @@ describe('mdxCompileError (the build-outage guard)', () => {
     expect(err).not.toContain('\n');
     expect(err).not.toMatch(/^\[next-mdx-remote\]/);
   });
+
+  it('catches the exact "<Answer>" invention that broke deploys — compiles fine, 404s at prerender', async () => {
+    const bad = `Lead.\n\n## FAQ\n<FAQ>\n<Question q="x?"><Answer>yes</Answer></Question>\n</FAQ>`;
+    const err = await mdxCompileError(bad);
+    expect(err).not.toBeNull();
+    expect(err).toMatch(/unknown component/i);
+    expect(err).toContain('<Answer>');
+    // The feedback must name the real palette so the retry can self-correct.
+    expect(err).toContain('<Question>');
+  });
+
+  it('allows every registered component and plain HTML tags', async () => {
+    expect(await mdxCompileError(VALID_BODY)).toBeNull();
+    expect(await mdxCompileError('A list:\n\n<ul><li>plain html is fine</li></ul>')).toBeNull();
+  });
 });
