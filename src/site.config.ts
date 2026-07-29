@@ -83,17 +83,36 @@ export const siteConfig = {
     apiKeyEnv: 'GROQ_API_KEY',
   },
 
-  // Automatic failover: generate.ts retries against this model (same API key)
-  // only on transient availability errors from the primary — 413 "request too
-  // large", 429, 5xx, "overloaded"/"unavailable". The primary's free tier is
-  // capped at 8K tokens/minute (input + requested output, counted at
-  // admission); Scout's 30K TPM cap gives the failover real headroom when a
-  // research-heavy prompt blows the primary's budget.
-  llmFallback: {
-    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-    apiKeyEnv: 'GROQ_API_KEY',
-  },
+  // Automatic failover chain: generate.ts walks these in order when the
+  // current provider errors — 413 "request too large", 429, 5xx,
+  // "overloaded"/"unavailable", or a hard 400 (e.g. Groq's
+  // json_validate_failed) that repeating the same model can't fix. Groq
+  // free-tier limits are PER MODEL (each has its own tokens-per-minute and
+  // tokens-per-day bucket on the same key), so every extra model here is real
+  // extra daily runway: the primary's 8K TPM / 200K TPD gets backed by Scout
+  // and Maverick (30K TPM, 500K TPD each) and finally llama-3.3-70b (12K TPM,
+  // 100K TPD). `maxTokens` overrides the request's completion budget — the
+  // 30K-TPM models can afford a bigger ask, which also prevents the truncated
+  // JSON that made Scout fail json_object validation on the old 3584 cap.
+  llmFallbacks: [
+    {
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      apiKeyEnv: 'GROQ_API_KEY',
+      maxTokens: 8000,
+    },
+    {
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+      model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+      apiKeyEnv: 'GROQ_API_KEY',
+      maxTokens: 8000,
+    },
+    {
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+      model: 'llama-3.3-70b-versatile',
+      apiKeyEnv: 'GROQ_API_KEY',
+    },
+  ],
 
   // ── Engine: hero images ('pexels' | 'openverse' | 'none') ─────
   imageProvider: 'pexels',
