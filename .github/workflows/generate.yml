@@ -74,5 +74,10 @@ jobs:
           fi
 
           git commit -m "content: candidate $(date -u +%Y-%m-%dT%H:00Z)"
-          git push --force-with-lease origin "HEAD:${CANDIDATE_BRANCH}"
+          remote_sha="$(git ls-remote --heads origin "${CANDIDATE_BRANCH}" | awk '{print $1}')"
+          if [[ -n "${remote_sha}" ]]; then
+            git push --force-with-lease="refs/heads/${CANDIDATE_BRANCH}:${remote_sha}" origin "HEAD:${CANDIDATE_BRANCH}"
+          else
+            git push origin "HEAD:${CANDIDATE_BRANCH}"
+          fi
           echo "Candidate content pushed to ${CANDIDATE_BRANCH}; production was not deployed."
