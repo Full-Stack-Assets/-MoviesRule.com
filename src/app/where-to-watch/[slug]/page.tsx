@@ -11,7 +11,8 @@ import {
   faqListJsonLd,
 } from '@/lib/structured-data';
 
-export const revalidate = 300;
+export const dynamic = 'force-static';
+export const dynamicParams = false;
 
 /**
  * Evergreen, transactional "where to watch X" page — one per structured film
@@ -61,10 +62,8 @@ export default async function WhereToWatchPage({
   const { slug } = await params;
   const post = await loadPost(slug);
   const film = post?.frontmatter.film;
-  // Only films with TMDB facts get a page; everything else 404s.
   if (!post || post.frontmatter.type !== 'review' || !film) notFound();
 
-  // Future-dated (scheduled) reviews stay unpublished here too.
   if (new Date(post.frontmatter.date).getTime() > Date.now()) notFound();
 
   const yr = film.year ? ` (${film.year})` : '';
@@ -118,10 +117,8 @@ export default async function WhereToWatchPage({
         resolve to live, up-to-date listings.
       </p>
 
-      {/* Where to watch rail (provider chips + affiliate links) */}
       <WhereToWatch ctx={{ title: film.title, providers }} />
 
-      {/* Film facts */}
       {facts.length > 0 && (
         <section className="mt-12">
           <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.3em] text-muted">
@@ -138,7 +135,6 @@ export default async function WhereToWatchPage({
         </section>
       )}
 
-      {/* Link to the full review */}
       <section className="mt-12 border-2 border-ink p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -159,7 +155,6 @@ export default async function WhereToWatchPage({
         </div>
       </section>
 
-      {/* FAQ */}
       <section className="mt-12">
         <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.3em] text-muted">
           FAQ
@@ -183,7 +178,6 @@ export default async function WhereToWatchPage({
   );
 }
 
-/** Build the templated-but-honest watch FAQ for a film + its provider list. */
 function buildWatchFaqs(
   title: string,
   providers: string[]
