@@ -1,4 +1,4 @@
-import { listPosts, listReviews } from '@/lib/posts';
+import { listPosts } from '@/lib/posts';
 import { SITE_URL } from '@/lib/structured-data';
 import type { MetadataRoute } from 'next';
 
@@ -6,7 +6,7 @@ export const dynamic = 'force-static';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = SITE_URL;
-  const [posts, reviews] = await Promise.all([listPosts(), listReviews()]);
+  const posts = await listPosts();
   const postEntries: MetadataRoute.Sitemap = posts.map((p) => ({
     url: `${siteUrl}/blog/${p.slug}`,
     lastModified: new Date(p.frontmatter.date),
@@ -20,19 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'daily',
     priority: 0.5,
   }));
-  const watchEntries: MetadataRoute.Sitemap = reviews.map((p) => ({
-    url: `${siteUrl}/where-to-watch/${p.slug}`,
-    lastModified: new Date(p.frontmatter.date),
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }));
   return [
     { url: siteUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
     { url: `${siteUrl}/where-to-watch`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.6 },
     { url: `${siteUrl}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
     { url: `${siteUrl}/stats`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.3 },
     ...postEntries,
-    ...watchEntries,
     ...catEntries,
   ];
 }
