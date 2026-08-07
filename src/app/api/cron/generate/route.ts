@@ -5,18 +5,16 @@ import { runPipeline } from '@/lib/orchestrator/pipeline';
 // NOTE: On Cloudflare Pages Functions the CPU limit per request is ~30s and
 // the pipeline routinely exceeds that (scrape + LLM + commit). If you deploy
 // to CF Pages, migrate this handler to a Cloudflare Workers Cron Trigger
-// (15-min CPU budget) that imports the same `runPipeline`. On Vercel, the
-// default serverless function budget is enough on Pro; set `maxDuration` if
-// you see timeouts.
+// (15-min CPU budget) that imports the same `runPipeline`.
 export const runtime = 'nodejs';
-export const maxDuration = 300; // Vercel: 5 minutes
+export const maxDuration = 300; // Keep room for scrape + LLM + commit
 export const dynamic = 'force-dynamic';
 
 function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
   const header = req.headers.get('authorization') ?? '';
-  // Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`
+  // Scheduled callers send an Authorization bearer token.
   if (header === `Bearer ${secret}`) return true;
   // Also accept ?secret= for manual curl testing
   const url = new URL(req.url);

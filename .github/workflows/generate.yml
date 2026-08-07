@@ -52,10 +52,10 @@ jobs:
 
       - name: Commit and push
         env:
-          # Optional Vercel Deploy Hook URL (Vercel → Settings → Git → Deploy
-          # Hooks). When set, a production redeploy is triggered after each new
-          # post is pushed. Unset = skipped (relies on Vercel's git auto-deploy).
-          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+          # Optional Render Deploy Hook URL (Render → Service → Settings → Deploy Hook).
+          # When set, a production redeploy is triggered after each new post is pushed.
+          # Unset = skipped (relies on Render's git auto-deploy).
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
           # The deploy hook targets production; only fire it when pushing here.
           PRODUCTION_BRANCH: main
         run: |
@@ -84,12 +84,12 @@ jobs:
           for attempt in 1 2 3 4 5; do
             if git push origin "HEAD:${branch}"; then
               echo "Pushed on attempt ${attempt}."
-              # Trigger a Vercel production redeploy for the new post (non-fatal).
-              if [ -n "${VERCEL_DEPLOY_HOOK_URL}" ] && [ "${branch}" = "${PRODUCTION_BRANCH}" ]; then
-                if curl -fsS -m 30 --retry 3 -X POST "${VERCEL_DEPLOY_HOOK_URL}" >/dev/null; then
-                  echo "Vercel redeploy triggered."
+              # Trigger a Render production redeploy for the new post (non-fatal).
+              if [ -n "${RENDER_DEPLOY_HOOK_URL}" ] && [ "${branch}" = "${PRODUCTION_BRANCH}" ]; then
+                if curl -fsS -m 30 --retry 3 -X POST "${RENDER_DEPLOY_HOOK_URL}" >/dev/null; then
+                  echo "Render redeploy triggered."
                 else
-                  echo "Vercel deploy hook call failed (non-fatal)." >&2
+                  echo "Render deploy hook call failed (non-fatal)." >&2
                 fi
               fi
               exit 0
