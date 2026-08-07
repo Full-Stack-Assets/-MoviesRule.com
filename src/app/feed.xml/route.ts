@@ -1,16 +1,12 @@
 import { listPosts } from '@/lib/posts';
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from '@/lib/structured-data';
 
-export const revalidate = 300;
+export const dynamic = 'force-static';
 
 export async function GET() {
   const posts = await listPosts();
   const siteUrl = SITE_URL;
-
-  const items = posts
-    .slice(0, 20)
-    .map(
-      (p) => `
+  const items = posts.slice(0, 20).map((p) => `
     <item>
       <title><![CDATA[${p.frontmatter.title}]]></title>
       <link>${siteUrl}/blog/${p.slug}</link>
@@ -18,10 +14,7 @@ export async function GET() {
       <pubDate>${new Date(p.frontmatter.date).toUTCString()}</pubDate>
       <description><![CDATA[${p.frontmatter.description}]]></description>
       <category>${p.frontmatter.category}</category>
-    </item>`
-    )
-    .join('');
-
+    </item>`).join('');
   const feed = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -34,11 +27,5 @@ export async function GET() {
     ${items}
   </channel>
 </rss>`;
-
-  return new Response(feed.trim(), {
-    headers: {
-      'content-type': 'application/xml; charset=utf-8',
-      'cache-control': 'public, max-age=300',
-    },
-  });
+  return new Response(feed.trim(), { headers: { 'content-type': 'application/xml; charset=utf-8' } });
 }
