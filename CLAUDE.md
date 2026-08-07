@@ -15,7 +15,7 @@ lives in **`src/site.config.ts`**. A few internal identifiers still carry the
 upstream template name `trendblog` — see [Template defaults](#template-defaults).
 
 **Cost at steady state: $0** — runs entirely on free tiers (Groq, Brave,
-Pexels, GitHub Actions, Vercel/Cloudflare).
+Pexels, GitHub Actions, Render/Cloudflare).
 
 ## Tech stack
 
@@ -200,11 +200,9 @@ placeholders only. See `SECURITY_REMEDIATION.md` for history/context.
   driver for `content/.topic-log.json` (registered via `.gitattributes` +
   `scripts/merge-topic-log.mjs`) so concurrent runs don't conflict.
 - **`.github/workflows/newsletter.yml`** — periodic digest send.
-- **Hosting**: Vercel (auto-deploys on each push) or Cloudflare Pages as a static
+- **Hosting**: Render (auto-deploys on each push) or Cloudflare Pages as a static
   host. Do **not** run the pipeline inside a Cloudflare Pages Function (~30s CPU
   limit; the pipeline takes 30–90s). Let the Action generate.
-- The Vercel cron route exists but Vercel Hobby caps crons at once/day, which is
-  why scheduling lives in GitHub Actions for the $0 path.
 
 ## Template defaults
 

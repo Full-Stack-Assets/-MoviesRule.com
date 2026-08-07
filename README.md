@@ -8,7 +8,7 @@ structured MDX post, and commits it to GitHub. The Next.js site auto-deploys.
 what's worth streaming.
 
 **Stack:** Next.js 15 · TinaCMS · Groq (free tier) · Brave Search ·
-Pexels · GitHub Contents API · Vercel.
+Pexels · GitHub Contents API · Render.
 
 **Monthly cost at steady state:** $0.
 
@@ -138,23 +138,16 @@ variables → Actions**. The workflow has `contents: write` and a `concurrency`
 group so a slow run never overlaps the next tick. Use the **Run workflow** button
 (`workflow_dispatch`) to trigger a one-off run.
 
-> **Why not a Vercel cron?** Vercel's Hobby (free) plan caps cron jobs at **once
-> per day**, so an hourly tick there would be throttled. To stay at $0,
-> scheduling lives in GitHub Actions. On Vercel **Pro** you can add an hourly
-> entry to `vercel.json` (`{ "path": "/api/cron/generate", "schedule": "0 * * * *" }`)
-> — the route already handles `Authorization: Bearer $CRON_SECRET`. Don't run
-> both at once or you'll generate twice an hour.
-
-### Hosting — Vercel (recommended)
+### Hosting — Render (recommended)
 
 1. Push this repo to GitHub.
-2. Import the repo into Vercel (it auto-detects Next.js; `vercel.json` sets the
-   build command).
-3. Add every env var from `.env.local` to the Vercel project, plus
+2. Create a new **Web Service** on Render from this repo (Node runtime).
+3. Set build/start commands to `npm ci && npm run build` and `npm start`.
+4. Add every env var from `.env.local` to the Render service, plus
    `NEXT_PUBLIC_SITE_URL=https://moviesrule.com`.
 
-Vercel auto-deploys on every push, so each hourly commit from the Action
-redeploys the site. Optionally set a `VERCEL_DEPLOY_HOOK_URL` Action secret to
+Render auto-deploys on every push, so each hourly commit from the Action
+redeploys the site. Optionally set a `RENDER_DEPLOY_HOOK_URL` Action secret to
 force an immediate production redeploy after each post.
 
 ### Self-host

@@ -19,7 +19,7 @@ The following credential **types** were exposed (values intentionally omitted):
 Exposed secrets cannot be "un-leaked" by editing or deleting files. Every
 credential above must be **revoked and regenerated** at its provider, and the
 new values stored only in untracked secret stores (local `.env.local`, GitHub
-Actions secrets, and the Vercel project env vars) — never committed.
+Actions secrets, and the Render service env vars) — never committed.
 
 | Credential | Rotate at |
 |---|---|
@@ -29,7 +29,7 @@ Actions secrets, and the Vercel project env vars) — never committed.
 | GitHub PAT | https://github.com/settings/tokens |
 | `CRON_SECRET` | regenerate: `openssl rand -hex 32` |
 
-After rotating, update each deployment environment (Vercel) and redeploy.
+After rotating, update each deployment environment (Render) and redeploy.
 
 ## Repository hygiene
 - `.env.local` is git-ignored and was never tracked in this repository.
