@@ -1,9 +1,9 @@
-import { ADSENSE_CLIENT } from '@/lib/ads';
+import { ADSENSE_PUBLISHER_ID } from '@/lib/ads';
 
 export const dynamic = 'force-static';
 
 export function GET() {
-  const publisherId = ADSENSE_CLIENT.replace(/^ca-/, '');
+  const publisherId = ADSENSE_PUBLISHER_ID.replace(/^ca-/, '');
   const body = `google.com, ${publisherId}, DIRECT, f08c47fec0942fa0\n`;
   return new Response(body, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
 }
