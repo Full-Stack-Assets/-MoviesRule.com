@@ -6,7 +6,7 @@ import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, websiteJsonLd } from '@/lib/stru
 import { SubscribeForm } from '@/components/SubscribeForm';
 import { newsletterConfigured } from '@/lib/newsletter';
 import { AdSlot } from '@/components/AdSlot';
-import { ADSENSE_CLIENT, ADSENSE_PUBLISHER_ID, ADSENSE_SLOT_FOOTER } from '@/lib/ads';
+import { ADSENSE_PUBLISHER_ID, ADSENSE_SLOT_FOOTER } from '@/lib/ads';
 import { AFFILIATE_ENABLED } from '@/lib/affiliate';
 import { siteConfig } from '@/site.config';
 import { PortfolioAnalytics } from '@/components/PortfolioAnalytics';
@@ -57,15 +57,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${fontDisplay.variable} ${fontBody.variable} ${fontMono.variable}`}>
       <body className="relative">
+        <Script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`}
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
         <PortfolioAnalytics />
-        {ADSENSE_CLIENT && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd()).replace(/</g, '\\u003c') }}
