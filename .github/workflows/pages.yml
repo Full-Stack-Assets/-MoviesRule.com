@@ -37,8 +37,17 @@ jobs:
           NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_IN_ARTICLE }}
           NEXT_PUBLIC_ADSENSE_SLOT_FOOTER: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER }}
         run: npm run build
-      - name: Verify static artifact
-        run: test -f out/index.html
+      - name: Verify custom-domain artifact contract
+        run: |
+          test -f out/index.html
+          grep -q '/_next/' out/index.html
+          if grep -q '/-MoviesRule.com/_next/' out/index.html; then
+            echo 'Project-path assets leaked into the custom-domain artifact.' >&2
+            exit 1
+          fi
+          grep -q 'pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3754070789576502' out/index.html
+          grep -q 'google-adsense-account' out/index.html
+          grep -q 'ca-pub-3754070789576502' out/index.html
       - if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
       - if: github.event_name != 'pull_request'
