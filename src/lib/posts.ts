@@ -3,6 +3,7 @@ import path from 'node:path';
 import matter from 'gray-matter';
 import readingTime from 'reading-time';
 import type { FilmFacts, Rating, PostType, ReviewAudio } from './reviews';
+import { isRelevantScreenPost } from './orchestrator/relevance';
 
 export interface PostFrontmatter {
   title: string;
@@ -72,6 +73,7 @@ export async function loadPost(slug: string): Promise<Post | null> {
   try {
     const raw = await fs.readFile(path.join(POSTS_DIR, `${slug}.mdx`), 'utf8');
     const { data, content } = matter(raw);
+    if (!isRelevantScreenPost(data as PostFrontmatter)) return null;
     const rt = readingTime(content);
     return {
       slug,
@@ -85,12 +87,8 @@ export async function loadPost(slug: string): Promise<Post | null> {
 }
 
 export async function listSlugs(): Promise<string[]> {
-  try {
-    const files = await fs.readdir(POSTS_DIR);
-    return files.filter((f) => f.endsWith('.mdx')).map((f) => f.replace(/\.mdx$/, ''));
-  } catch {
-    return [];
-  }
+  const posts = await listPosts();
+  return posts.map((post) => post.slug);
 }
 
 /**

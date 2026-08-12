@@ -6,9 +6,10 @@ import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, websiteJsonLd } from '@/lib/stru
 import { SubscribeForm } from '@/components/SubscribeForm';
 import { newsletterConfigured } from '@/lib/newsletter';
 import { AdSlot } from '@/components/AdSlot';
-import { ADSENSE_CLIENT, ADSENSE_SLOT_FOOTER } from '@/lib/ads';
+import { ADSENSE_CLIENT, ADSENSE_PUBLISHER_ID, ADSENSE_SLOT_FOOTER } from '@/lib/ads';
 import { AFFILIATE_ENABLED } from '@/lib/affiliate';
 import { siteConfig } from '@/site.config';
+import { PortfolioAnalytics } from '@/components/PortfolioAnalytics';
 import './globals.css';
 
 /* Marquee pairing: a condensed cinema-poster display face for headlines, a
@@ -49,13 +50,14 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
   },
   // Static AdSense site-verification tag in <head> — crawlable without JS.
-  other: { 'google-adsense-account': ADSENSE_CLIENT },
+  other: { 'google-adsense-account': ADSENSE_PUBLISHER_ID },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${fontDisplay.variable} ${fontBody.variable} ${fontMono.variable}`}>
       <body className="relative">
+        <PortfolioAnalytics />
         {ADSENSE_CLIENT && (
           <Script
             async

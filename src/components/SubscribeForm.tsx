@@ -12,6 +12,8 @@ export function SubscribeForm() {
       href={subscribeUrl}
       target="_blank"
       rel="noopener noreferrer"
+      data-analytics-event="newsletter_signup"
+      data-placement="footer"
       className="inline-flex border border-accent bg-accent px-4 py-2 text-sm font-semibold text-paper transition-colors hover:bg-transparent hover:text-accent"
     >
       Subscribe to the newsletter

@@ -11,6 +11,7 @@ import { serialize } from './serialize';
 import { loadTopicLog, saveTopicLog, commitPost } from './github';
 import { runReviewPipeline } from './review-pipeline';
 import type { RawItem, ScoredItem, TopicLog } from './types';
+import { filterRelevantScreenItems } from './relevance';
 
 export interface PipelineResult {
   ok: boolean;
@@ -58,11 +59,12 @@ export async function runPipeline(opts: PipelineOptions = {}): Promise<PipelineR
     // they injected off-niche winners on this niche site. Excluded here so only
     // on-niche stories (Reddit / RSS / Brave / YouTube / Google Trends — all
     // configured for this site's niche in siteConfig.sources) can win.
-    const allItems = [...reddit, ...rss, ...yt, ...brave, ...trends];
+    const gatheredItems = [...reddit, ...rss, ...yt, ...brave, ...trends];
+    const allItems = filterRelevantScreenItems(gatheredItems);
     doneGather();
 
     if (allItems.length === 0) {
-      return { ok: false, skipped: 'no items from any source', timings };
+      return { ok: false, skipped: 'no on-niche film or television items from any source', timings };
     }
 
     // ── 2. Score & pick ───────────────────────────────────────────
