@@ -74,7 +74,7 @@ export const siteConfig = {
   },
 
   // ── Ads ───────────────────────────────────────────────────────
-  adsenseClient: 'ca-pub-4655488107179825',
+  adsenseClient: 'ca-pub-3754070789576502',
 
   // ── Engine: writer LLM (Groq, OpenAI-compatible) ──────────────
   llm: {

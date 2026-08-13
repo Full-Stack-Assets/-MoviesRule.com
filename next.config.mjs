@@ -1,12 +1,8 @@
 /** @type {import('next').NextConfig} */
-const repoPath = '/-MoviesRule.com';
-
 const nextConfig = {
   reactStrictMode: true,
   output: 'export',
   trailingSlash: true,
-  basePath: repoPath,
-  assetPrefix: `${repoPath}/`,
   images: {
     unoptimized: true,
     remotePatterns: [
