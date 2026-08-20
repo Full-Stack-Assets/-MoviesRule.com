@@ -13,13 +13,13 @@ The following credential **types** were exposed (values intentionally omitted):
 - Brave Search API key
 - Pexels API key
 - GitHub personal access token
-- `CRON_SECRET`
+- retired `CRON_SECRET` (the server route has since been removed)
 
 ## Required action — rotate everything (do this first)
 Exposed secrets cannot be "un-leaked" by editing or deleting files. Every
 credential above must be **revoked and regenerated** at its provider, and the
-new values stored only in untracked secret stores (local `.env.local`, GitHub
-Actions secrets, and the Render service env vars) — never committed.
+new values stored only in untracked secret stores (local `.env.local` and
+GitHub Actions secrets) — never committed.
 
 | Credential | Rotate at |
 |---|---|
@@ -27,9 +27,10 @@ Actions secrets, and the Render service env vars) — never committed.
 | Brave Search key | https://api.search.brave.com/app/keys |
 | Pexels key | https://www.pexels.com/api/ |
 | GitHub PAT | https://github.com/settings/tokens |
-| `CRON_SECRET` | regenerate: `openssl rand -hex 32` |
+| retired `CRON_SECRET` | do not reissue; the guarded route no longer exists |
 
-After rotating, update each deployment environment (Render) and redeploy.
+After rotating, update GitHub Actions secrets and run the test and Pages
+workflows before the next candidate-generation dispatch.
 
 ## Repository hygiene
 - `.env.local` is git-ignored and was never tracked in this repository.

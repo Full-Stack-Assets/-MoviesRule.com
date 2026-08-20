@@ -51,17 +51,8 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
 fi
 
 echo
-bold "Fresh CRON_SECRET (set this in .env.local AND Render, then redeploy):"
-if command -v openssl >/dev/null 2>&1; then
-  echo "  CRON_SECRET=$(openssl rand -hex 32)"
-else
-  echo "  (openssl not found) generate with: openssl rand -hex 32"
-fi
-
-echo
 bold "Update the new values in ALL of these, then re-run with the new keys:"
 cat <<'PLACES'
   - .env.local                 (local development)
   - GitHub → Settings → Secrets and variables → Actions   (the hourly pipeline)
-  - Render → Service → Environment    (then redeploy)
 PLACES

@@ -4,7 +4,7 @@ Guidance for AI assistants (and humans) working in this repository.
 
 ## What this is
 
-A **self-hosted, zero-cost auto-blog engine**. A scheduled job runs every hour,
+A **statically deployed editorial engine**. A scheduled job runs every hour,
 pulls candidate stories from seven sources, scores them, researches the winner,
 asks an LLM to write a structured MDX post under a strict contract, and commits
 it to GitHub. A Next.js site renders the committed posts and auto-deploys.
@@ -14,8 +14,8 @@ streaming niche site. The engine itself is generic: everything niche-specific
 lives in **`src/site.config.ts`**. A few internal identifiers still carry the
 upstream template name `trendblog` — see [Template defaults](#template-defaults).
 
-**Cost at steady state: $0** — runs entirely on free tiers (Groq, Brave,
-Pexels, GitHub Actions, Render/Cloudflare).
+Production delivery uses GitHub Actions and GitHub Pages; provider usage and
+limits remain governed by the configured third-party accounts.
 
 ## Tech stack
 
@@ -37,7 +37,6 @@ Pexels, GitHub Actions, Render/Cloudflare).
 npm install              # install deps
 npm run dev              # TinaCMS + Next dev server at http://localhost:3000
 npm run build            # scripts/build.sh — conditional Tina build, then next build
-npm start                # serve the production build
 npm run lint             # next lint (eslint, next/core-web-vitals)
 
 npm test                 # vitest run — the unit suite (tests/unit/*.test.ts)
@@ -97,9 +96,8 @@ Core types live in `src/lib/orchestrator/types.ts`: `RawItem`, `ScoredItem`,
 - `page.tsx` — homepage (latest posts) · `blog/[slug]/page.tsx` — post page
 - `categories/[category]`, `tags/[tag]` — taxonomy listings
 - `about`, `stats`, `vaporloop` — static-ish pages
-- `api/cron/generate/route.ts` — auth'd (`Bearer $CRON_SECRET`) HTTP trigger for
-  the pipeline; `nodejs` runtime, `maxDuration` 300s
-- `api/subscribe/route.ts` — newsletter signup
+- Newsletter surfaces link to `NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_URL`; the
+  static site exposes no write-capable API route.
 - `feed.xml`, `sitemap.ts`, `robots.ts`, `ads.txt` — generated endpoints
 - `globals.css` — holds the `.prose-editorial` typography that styles post bodies
 
@@ -184,9 +182,9 @@ See `.env.example` for the full annotated list. Highlights:
   any unset source/provider is skipped.
 - `GITHUB_TOKEN` / `GITHUB_OWNER` / `GITHUB_REPO` / `GITHUB_BRANCH` — for the
   Action's commit path.
-- `CRON_SECRET` — guards `/api/cron/generate`.
 - Optional: syndication (`BLUESKY_*`, `MASTODON_*`, `DEVTO_API_KEY`), newsletter
-  (`BUTTONDOWN_API_KEY`), AdSense (`NEXT_PUBLIC_ADSENSE_*`).
+  (`NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_URL`, `BUTTONDOWN_API_KEY` for digest
+  drafts), AdSense (`NEXT_PUBLIC_ADSENSE_*`).
 
 **Never commit real secrets.** `.env.local` is gitignored; `.env.example` holds
 placeholders only. See `SECURITY_REMEDIATION.md` for history/context.
@@ -199,10 +197,11 @@ placeholders only. See `SECURITY_REMEDIATION.md` for history/context.
   `content/`. It rebases-and-retries on push (up to 5×) and uses a `union` merge
   driver for `content/.topic-log.json` (registered via `.gitattributes` +
   `scripts/merge-topic-log.mjs`) so concurrent runs don't conflict.
-- **`.github/workflows/newsletter.yml`** — periodic digest send.
-- **Hosting**: Render (auto-deploys on each push) or Cloudflare Pages as a static
-  host. Do **not** run the pipeline inside a Cloudflare Pages Function (~30s CPU
-  limit; the pipeline takes 30–90s). Let the Action generate.
+- **`.github/workflows/newsletter.yml`** — periodic digest draft creation.
+- **`.github/workflows/pages.yml`** — the approved static build and GitHub Pages
+  deployment. Candidate-generation bot commits remain on review hold because
+  `GITHUB_TOKEN` pushes do not recursively trigger it; a human uses the manual
+  dispatch after reviewing the candidate set.
 
 ## Template defaults
 

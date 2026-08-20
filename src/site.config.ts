@@ -85,32 +85,16 @@ export const siteConfig = {
 
   // Automatic failover chain: generate.ts walks these in order when the
   // current provider errors — 413 "request too large", 429, 5xx,
-  // "overloaded"/"unavailable", or a hard 400 (e.g. Groq's
-  // json_validate_failed) that repeating the same model can't fix. Groq
-  // free-tier limits are PER MODEL (each has its own tokens-per-minute and
-  // tokens-per-day bucket on the same key), so every extra model here is real
-  // extra daily runway: the primary's 8K TPM / 200K TPD gets backed by Scout
-  // and Maverick (30K TPM, 500K TPD each) and finally llama-3.3-70b (12K TPM,
-  // 100K TPD). `maxTokens` overrides the request's completion budget — the
-  // 30K-TPM models can afford a bigger ask, which also prevents the truncated
-  // JSON that made Scout fail json_object validation on the old 3584 cap.
+  // "overloaded"/"unavailable", or a hard 400 that repeating the same model
+  // cannot fix. Keep this chain restricted to Groq's current model catalog;
+  // retired endpoints turn a recoverable primary failure into a guaranteed
+  // second failure. `maxTokens` gives long-form JSON room to close cleanly.
   llmFallbacks: [
     {
       endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'openai/gpt-oss-20b',
       apiKeyEnv: 'GROQ_API_KEY',
       maxTokens: 8000,
-    },
-    {
-      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-      model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
-      apiKeyEnv: 'GROQ_API_KEY',
-      maxTokens: 8000,
-    },
-    {
-      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-      model: 'llama-3.3-70b-versatile',
-      apiKeyEnv: 'GROQ_API_KEY',
     },
   ],
 

@@ -15,6 +15,19 @@ describe('isRelevantScreenItem', () => {
     expect(isRelevantScreenItem(item(title))).toBe(true);
   });
 
+  it('ignores malformed non-string feed fields without aborting the pipeline', () => {
+    const uncoercible = Object.create(null);
+    const malformed = {
+      ...item('placeholder'),
+      title: uncoercible,
+      summary: uncoercible,
+      tags: [uncoercible, 'movie'],
+    } as unknown as RawItem;
+
+    expect(() => isRelevantScreenItem(malformed)).not.toThrow();
+    expect(isRelevantScreenItem(malformed)).toBe(true);
+  });
+
   it('always retains structured film reviews', () => {
     expect(isRelevantScreenPost({ title: 'An intentionally terse title', type: 'review', film: { title: 'Example' } })).toBe(true);
   });

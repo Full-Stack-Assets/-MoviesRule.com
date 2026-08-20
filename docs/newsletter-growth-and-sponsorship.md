@@ -2,8 +2,8 @@
 
 A concrete plan to turn the existing newsletter plumbing into a real audience and
 a real revenue line. Grounded in what's already wired: **Buttondown** as the
-provider (`NEWSLETTER_PROVIDER=buttondown`), the footer `SubscribeForm`, the
-`api/subscribe` route, and the weekly digest workflow
+provider (`NEWSLETTER_PROVIDER=buttondown`), the hosted signup URL exposed as
+`NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_URL`, the footer `SubscribeForm`, and the weekly digest workflow
 (`.github/workflows/newsletter.yml` → `scripts/newsletter-digest.ts`).
 
 The newsletter matters disproportionately for this site: it's the **one channel

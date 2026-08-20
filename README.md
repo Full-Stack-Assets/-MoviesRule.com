@@ -1,14 +1,14 @@
 # Movies Rule
 
-A self-hosted, zero-cost movie & streaming blog. A scheduled job runs every
+A statically deployed movie & streaming publication. A scheduled job runs every
 hour, picks the highest-signal story from seven sources, researches it, writes a
 structured MDX post, and commits it to GitHub. The Next.js site auto-deploys.
 
 **Live:** [moviesrule.com](https://moviesrule.com) — film news, reviews, and
 what's worth streaming.
 
-**Stack:** Next.js 15 · TinaCMS · Groq (free tier) · Brave Search ·
-Pexels · GitHub Contents API · Render.
+**Stack:** Next.js 15 · TinaCMS · Groq · Brave Search · Pexels · GitHub
+Contents API · GitHub Actions · GitHub Pages.
 
 **Monthly cost at steady state:** $0.
 
@@ -67,12 +67,9 @@ cp .env.example .env.local
 | `PEXELS_API_KEY` | https://www.pexels.com/api/new/ | Unlimited for dev use |
 | `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` | reddit.com → prefs → apps (create a "script" app) | Free |
 | `GITHUB_TOKEN` | github.com → Settings → Developer settings → Fine-grained PAT | Scope: **Contents: Read/Write** on the blog repo only |
-| `CRON_SECRET` | `openssl rand -hex 32` | — |
 
-The writer LLM defaults to **Groq** (`openai/gpt-oss-120b`, with an
-automatic `meta-llama/llama-4-scout-17b-16e-instruct` fallback on the same
-key — the primary's free tier caps at 8K tokens/minute; Scout's 30K TPM cap
-gives failover real headroom). To switch to
+The writer LLM defaults to **Groq** (`openai/gpt-oss-120b`, with
+`openai/gpt-oss-20b` as the current automatic fallback on the same key). To switch to
 OpenRouter, change the `llm` block in `src/site.config.ts` and set the matching
 key (`OPENROUTER_API_KEY`). Brave, Pexels, and Reddit are optional
 — any unset source is skipped (`imageProvider: 'openverse'` needs no image key).
@@ -116,9 +113,9 @@ the corresponding id — the site works ad- and affiliate-free out of the box.
   `NEXT_PUBLIC_VPN_AFFILIATE_URL`/`_NAME` for a region-unlock CTA. Earning
   links carry `rel="sponsored nofollow"` and a disclosure appears automatically
   whenever one is shown. Never commit real ids — these are env vars.
-- **Newsletter** — set `BUTTONDOWN_API_KEY` to activate the subscribe endpoint;
-  capture forms render in the footer site-wide and inline at the end of every
-  article.
+- **Newsletter** — set `NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_URL` to the hosted
+  signup page; links render in the footer and at the end of articles. Set
+  `BUTTONDOWN_API_KEY` only for the draft digest workflow.
 
 ---
 
@@ -128,9 +125,9 @@ the corresponding id — the site works ad- and affiliate-free out of the box.
 
 The hourly schedule lives in **`.github/workflows/generate.yml`**, which runs at
 the top of every hour (`cron: '0 * * * *'`), executes the pipeline with
-`npx tsx scripts/run-local.ts`, and commits any new post straight to the repo.
-No serverless CPU limits, free logs, and the push triggers your host to
-redeploy. This is the scheduler — your host below just serves the site.
+`npx tsx scripts/run-local.ts`, and commits any new candidate to the repo. Bot
+commits intentionally do not trigger another workflow. Review the candidate,
+then run **Deploy GitHub Pages** manually to authorize publication.
 
 Add the pipeline secrets (`GROQ_API_KEY`, `BRAVE_API_KEY`, `PEXELS_API_KEY`,
 `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`) under **Settings → Secrets and
@@ -138,27 +135,14 @@ variables → Actions**. The workflow has `contents: write` and a `concurrency`
 group so a slow run never overlaps the next tick. Use the **Run workflow** button
 (`workflow_dispatch`) to trigger a one-off run.
 
-### Hosting — Render (recommended)
+### Hosting — GitHub Pages
 
-1. Push this repo to GitHub.
-2. Create a new **Web Service** on Render from this repo (Node runtime).
-3. Set build/start commands to `npm ci && npm run build` and `npm start`.
-4. Add every env var from `.env.local` to the Render service, plus
-   `NEXT_PUBLIC_SITE_URL=https://moviesrule.com`.
-
-Render auto-deploys on every push, so each hourly commit from the Action
-redeploys the site. Optionally set a `RENDER_DEPLOY_HOOK_URL` Action secret to
-force an immediate production redeploy after each post.
-
-### Self-host
-
-`npm run build && npm start` and point a reverse proxy at port 3000. The GitHub
-Action still drives generation; to trigger a run by hand, hit the route with
-`curl`:
-
-```bash
-curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain/api/cron/generate
-```
+The approved production path is **`.github/workflows/pages.yml`**. It exports
+the site to `out/`, verifies the custom-domain and AdSense artifact contracts,
+and deploys through GitHub Pages. In **Settings → Pages**, set Source to
+**GitHub Actions** and keep `moviesrule.com` as the custom domain. Public build
+configuration belongs under **Settings → Secrets and variables → Actions →
+Variables**.
 
 ---
 
@@ -240,13 +224,9 @@ delete recent entries from `content/.topic-log.json`.
 failed to scrape (timeouts, 403s, JS-only pages). The pipeline skips gracefully;
 try again next tick.
 
-**Groq rate limit / 413 "request too large"** — the primary model's free tier
-counts input + requested output against an 8K tokens-per-minute budget at
-admission, so an oversized single request is rejected outright. The pipeline
-keeps requests under that budget and fails over to
-`meta-llama/llama-4-scout-17b-16e-instruct` (30K TPM, same key) when the
-primary is rate-limited or over budget; if you're iterating locally, just wait
-a moment.
+**Groq rate limit / 413 "request too large"** — the pipeline moves from the
+primary to the configured `openai/gpt-oss-20b` fallback for availability and hard
+provider errors. If both current models are rate-limited, wait before retrying.
 
 ---
 
@@ -262,6 +242,26 @@ a moment.
   (e.g. `0 */2 * * *` for every two hours, `0 12 * * *` for daily).
 
 See [`CLAUDE.md`](CLAUDE.md) for a deeper map of the codebase and conventions.
+
+---
+
+## Server-runtime build
+
+GitHub Pages remains the active production deployment until Human Authority
+selects and configures the replacement server host. The repository can also
+produce a provider-neutral Node.js runtime without changing that production
+boundary:
+
+~~~bash
+npm run build:server
+HOSTNAME=0.0.0.0 PORT=3000 node .next/standalone/server.js
+~~~
+
+The server build uses Next.js standalone output and packages both `public/`
+and `.next/static/`, preventing browser assets from returning 404 after
+deployment. A successful local build is not evidence of a production rollout;
+the approved host, secrets, custom-domain routing, health checks, and live-route
+verification are still required before changing the production claim.
 
 ---
 
