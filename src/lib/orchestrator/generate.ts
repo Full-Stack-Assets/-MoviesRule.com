@@ -16,9 +16,8 @@ const FALLBACK_LLMS: LlmProvider[] = (() => {
 })();
 
 /** A transient provider error worth failing over to the next LLM for.
- *  Includes 413 / "request too large": Groq admits a request against the
- *  per-minute token budget up front, so an over-budget request on the primary
- *  (8K TPM free tier) is rejected outright — but fits the fallbacks' 30K TPM. */
+ *  Includes 413 / "request too large": retrying the same oversized request on
+ *  the same provider cannot succeed, while the configured fallback may admit it. */
 export function isAvailabilityError(msg: string): boolean {
   return (
     /API error (?:413|429|5\d\d)\b/.test(msg) ||

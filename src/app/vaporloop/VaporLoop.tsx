@@ -193,9 +193,10 @@ export default function VaporLoop() {
 
   // Cleanup SSE on projectId change
   useEffect(() => {
+    const pollInterval = pollIntervalRef.current;
     return () => {
       stopSse();
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [projectId]);
 

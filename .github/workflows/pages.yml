@@ -40,6 +40,7 @@ jobs:
       - name: Verify custom-domain artifact contract
         run: |
           test -f out/index.html
+          test -f out/CNAME
           grep -q '/_next/' out/index.html
           if grep -q '/-MoviesRule.com/_next/' out/index.html; then
             echo 'Project-path assets leaked into the custom-domain artifact.' >&2

@@ -20,7 +20,14 @@ const offNicheSignals = [
 ];
 
 export function isRelevantScreenItem(item: RawItem): boolean {
-  const text = [item.title, item.summary, ...(item.tags || [])].filter(Boolean).join(' ').toLowerCase();
+  // Source payloads are untrusted at runtime even when callers are typed.
+  // Joining an object (especially one with a null prototype) can throw before
+  // relevance filtering runs, aborting the entire hourly candidate pipeline.
+  const tags: unknown[] = Array.isArray(item.tags) ? item.tags : [];
+  const text = [item.title, item.summary, ...tags]
+    .filter((value): value is string => typeof value === 'string')
+    .join(' ')
+    .toLowerCase();
   const filmMatch = filmSignals.some((term) => containsTerm(text, term));
   if (!filmMatch) return false;
   return !offNicheSignals.some((term) => containsTerm(text, term)) || containsTerm(text, 'documentary') || containsTerm(text, 'film');
